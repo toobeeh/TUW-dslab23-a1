@@ -2,11 +2,23 @@ package dslab.monitoring;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.SocketException;
+import java.util.HashMap;
+import java.util.Map;
 
+import at.ac.tuwien.dsg.orvell.Shell;
+import at.ac.tuwien.dsg.orvell.StopShellException;
+import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
+import dslab.data.monitoring.MonitoringPacket;
 import dslab.util.Config;
+import dslab.util.udp.UDPReceiver;
 
 public class MonitoringServer implements IMonitoringServer {
+
+    private UDPReceiver receiver;
+    private EmailMonitor monitor;
+    private Shell shell;
 
     /**
      * Creates a new server instance.
@@ -16,28 +28,45 @@ public class MonitoringServer implements IMonitoringServer {
      * @param in the input stream to read console input from
      * @param out the output stream to write console output to
      */
-    public MonitoringServer(String componentId, Config config, InputStream in, PrintStream out) {
-        // TODO
+    public MonitoringServer(String componentId, Config config, InputStream in, PrintStream out) throws SocketException {
+        int port = config.getInt("udp.port");
+        this.monitor = new EmailMonitor();
+
+        this.receiver = new UDPReceiver(port, 256, (message, address) -> {
+            MonitoringPacket packet = MonitoringPacket.fromString(message);
+            this.monitor.log(packet);
+        });
+
+        this.shell = new Shell(in, out);
+        this.shell.setPrompt(componentId + "> ");
+        this.shell.register(this);
     }
 
     @Override
     public void run() {
-        // TODO
+        this.receiver.listen();
+        this.shell.run();
     }
 
     @Override
+    @Command
     public void addresses() {
-        // TODO
+        String addresses = this.monitor.getAddressesResult();
+        this.shell.out().println(addresses.length() == 0 ? "No mails logged yet." : addresses);
     }
 
     @Override
+    @Command
     public void servers() {
-        // TODO
+        String servers = this.monitor.getServersResult();
+        this.shell.out().println(servers.length() == 0 ? "No mails logged yet." : servers);
     }
 
     @Override
+    @Command
     public void shutdown() {
-        // TODO
+        this.receiver.stop();
+        throw new StopShellException();
     }
 
     public static void main(String[] args) throws Exception {
