@@ -3,8 +3,6 @@ package dslab.monitoring;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.SocketException;
-import java.util.HashMap;
-import java.util.Map;
 
 import at.ac.tuwien.dsg.orvell.Shell;
 import at.ac.tuwien.dsg.orvell.StopShellException;
@@ -33,7 +31,7 @@ public class MonitoringServer implements IMonitoringServer {
         this.monitor = new EmailMonitor();
 
         this.receiver = new UDPReceiver(port, 256, (message, address) -> {
-            MonitoringPacket packet = MonitoringPacket.fromString(message);
+            MonitoringPacket packet = new MonitoringPacket().parseString(message);
             this.monitor.log(packet);
         });
 
