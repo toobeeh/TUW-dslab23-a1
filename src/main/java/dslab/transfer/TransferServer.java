@@ -37,7 +37,7 @@ public class TransferServer implements ITransferServer, Runnable {
         try{
 
             var parser = new DMTPParser();
-            var result = parser.parse("to kek,abcsefdd");
+            var result = parser.parse("subject hi");
 
             System.out.println(result);
         }

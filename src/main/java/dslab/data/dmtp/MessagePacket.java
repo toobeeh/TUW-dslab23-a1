@@ -1,7 +1,6 @@
 package dslab.data.dmtp;
 
 import dslab.data.*;
-import dslab.data.annotations.CommandPacketFactory;
 import dslab.data.annotations.CommandPacketId;
 
 @CommandPacketId("data")
@@ -24,13 +23,5 @@ public class MessagePacket implements Packet<MessagePacket> {
     @Override
     public String getResponseString(boolean error) {
         return error ? "error no recipients" : "ok";
-    }
-
-    @CommandPacketFactory
-    public static class MessagePacketFactory implements PacketFactory<MessagePacket> {
-        @Override
-        public MessagePacket create(String data) {
-            return new MessagePacket().parseString(data);
-        }
     }
 }

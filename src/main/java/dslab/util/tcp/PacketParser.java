@@ -1,10 +1,10 @@
 package dslab.util.tcp;
 
 import dslab.data.*;
-import dslab.data.annotations.CommandPacketFactory;
 import dslab.data.annotations.CommandPacketId;
 import dslab.data.annotations.ProcessCommandPacket;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
@@ -29,8 +29,13 @@ class InvalidPacketException extends Exception {
  */
 public abstract class PacketParser {
 
+    interface PacketFactory<TPacket extends Packet> {
+        TPacket create(String data) throws InvocationTargetException, InstantiationException, IllegalAccessException;
+    }
+
     private HashMap<String, Method> packetHandlers = new HashMap<>();
     private HashMap<String, PacketFactory> packetFactories = new HashMap<>();
+
 
     public PacketParser(){
 
@@ -45,16 +50,7 @@ public abstract class PacketParser {
                 // get packet type that the method handles (annotation is present as of previous if statement)
                 var processorAnnotation = method.getAnnotation(ProcessCommandPacket.class);
                 Class<? extends Packet> packetType = processorAnnotation.value();
-
-
-                // get the factory for that packet type
-                Class<? extends PacketFactory> packetFactory = null;
-                var classes = packetType.getClasses();
-                for(Class clazz : classes){
-                    if(clazz.getAnnotation(CommandPacketFactory.class) != null) packetFactory = clazz;
-                }
-                if(packetFactory == null) throw new RuntimeException("No factory annotation present for packet class");
-                validateCommandPacketFactory(packetFactory, packetType);
+                validateCommandPacketType(packetType);
 
                 // get the identification of the packet
                 var packetIdentification = packetType.getAnnotation(CommandPacketId.class);
@@ -62,7 +58,7 @@ public abstract class PacketParser {
                 String identification = packetIdentification.value();
 
                 // register handler and factory
-                this.packetFactories.put(identification, getFactoryInstance(packetFactory));
+                this.packetFactories.put(identification, getPacketFactory(packetType));
                 this.packetHandlers.put(identification, method);
             }
         }
@@ -109,7 +105,16 @@ public abstract class PacketParser {
             throw new InvalidPacketException();
         }
 
-        return factory.create(data);
+        Packet packet;
+        try{
+            packet = factory.create(data);
+        }
+        catch (Exception e){
+            System.err.println("Invalid packet");
+            throw new InvalidPacketException();
+        }
+
+        return packet;
     }
 
     /**
@@ -128,28 +133,19 @@ public abstract class PacketParser {
     }
 
     /**
-     * validates a factory class for a given packet type
-     * @param candidate a factory class
-     * @param packetType the packet which should be created by the factory class
+     * validates a class which has been annotated with a commandpacket id
+     * @param candidate the class that is a candidate for a command packet
      */
-    private void validateCommandPacketFactory(Class<? extends PacketFactory> candidate, Class<? extends Packet> packetType) {
+    private void validateCommandPacketType(Class<? extends Packet> candidate) {
 
-        if(!PacketFactory.class.isAssignableFrom(candidate)) throw new IllegalArgumentException("packet factory needs to implement packetfactory interface");
+        if(!Packet.class.isAssignableFrom(candidate)) throw new IllegalArgumentException("packet candidate needs to implement packet interface");
 
         try {
             var constructorParamTypes = candidate.getConstructor().getParameterTypes();
-            if(constructorParamTypes.length != 0) throw new IllegalArgumentException("packet factory constructor must not have arguments");
+            if(constructorParamTypes.length != 0) throw new IllegalArgumentException("packet candidate constructor must not have arguments");
         }
         catch(NoSuchMethodException e) {
             // thats okay, it just doesnt have to take params
-        }
-
-        try {
-            var factoryMethod = candidate.getMethod("create", String.class);
-            if(!packetType.isAssignableFrom(factoryMethod.getReturnType())) throw new IllegalArgumentException("packet factory method returns incompatible packet");
-        }
-        catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException("packet factory method could not be found");
         }
     }
 
@@ -158,9 +154,10 @@ public abstract class PacketParser {
      * @param clazz the factory class
      * @return the created instance
      */
-    private PacketFactory getFactoryInstance(Class<? extends PacketFactory> clazz){
+    private PacketFactory getPacketFactory(Class<? extends Packet> clazz){
         try {
-            return clazz.getDeclaredConstructor().newInstance();
+            var constructor = clazz.getConstructor();
+            return data -> constructor.newInstance().parseString(data);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

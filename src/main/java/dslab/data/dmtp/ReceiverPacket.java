@@ -1,12 +1,9 @@
 package dslab.data.dmtp;
 
 import dslab.data.Packet;
-import dslab.data.PacketFactory;
 import dslab.data.PacketParseException;
-import dslab.data.annotations.CommandPacketFactory;
 import dslab.data.annotations.CommandPacketId;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,13 +28,5 @@ public class ReceiverPacket implements Packet<ReceiverPacket> {
     @Override
     public String getResponseString(boolean error) {
         return "ok " + this.recipients.size();
-    }
-
-    @CommandPacketFactory
-    public static class ReceiverPacketFactory implements PacketFactory<ReceiverPacket> {
-        @Override
-        public ReceiverPacket create(String data) {
-            return new ReceiverPacket().parseString(data);
-        }
     }
 }
