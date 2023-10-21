@@ -7,4 +7,5 @@ public interface Packet<TPacket extends Packet> {
     public String toPacketString();
 
     public String getResponseString(boolean error);
+
 }

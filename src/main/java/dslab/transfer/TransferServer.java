@@ -2,8 +2,10 @@ package dslab.transfer;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 
 import dslab.ComponentFactory;
+import dslab.data.dmtp.MessagePacket;
 import dslab.util.Config;
 
 public class TransferServer implements ITransferServer, Runnable {
@@ -31,8 +33,20 @@ public class TransferServer implements ITransferServer, Runnable {
     }
 
     public static void main(String[] args) throws Exception {
-        ITransferServer server = ComponentFactory.createTransferServer(args[0], System.in, System.out);
-        server.run();
+
+        try{
+
+            var parser = new DMTPParser();
+            var result = parser.parse("to kek,abcsefdd");
+
+            System.out.println(result);
+        }
+        catch (Exception e){
+            System.err.println(e);
+        }
+
+        //ITransferServer server = ComponentFactory.createTransferServer(args[0], System.in, System.out);
+        //server.run();
     }
 
 }
