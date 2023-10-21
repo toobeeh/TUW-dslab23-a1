@@ -1,8 +1,12 @@
 package dslab.data.dmtp;
 
 import dslab.data.Packet;
+import dslab.data.PacketFactory;
 import dslab.data.PacketParseException;
+import dslab.data.annotations.CommandPacketFactory;
+import dslab.data.annotations.CommandPacketId;
 
+@CommandPacketId("subject")
 public class SubjectPacket implements Packet<SubjectPacket> {
 
     public String subject;
@@ -24,5 +28,14 @@ public class SubjectPacket implements Packet<SubjectPacket> {
     @Override
     public String getResponseString(boolean error) {
         return "ok";
+    }
+
+    @CommandPacketFactory
+    public class SubjectPacketFactory implements PacketFactory<SubjectPacket> {
+
+        @Override
+        public SubjectPacket create(String data) {
+            return new SubjectPacket().parseString(data);
+        }
     }
 }

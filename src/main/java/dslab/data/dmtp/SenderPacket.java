@@ -1,11 +1,15 @@
 package dslab.data.dmtp;
 
 import dslab.data.Packet;
+import dslab.data.PacketFactory;
 import dslab.data.PacketParseException;
+import dslab.data.annotations.CommandPacketFactory;
+import dslab.data.annotations.CommandPacketId;
 
 import java.util.Arrays;
 import java.util.List;
 
+@CommandPacketId("from")
 public class SenderPacket implements Packet<SenderPacket> {
 
     public String sender;
@@ -25,5 +29,14 @@ public class SenderPacket implements Packet<SenderPacket> {
     @Override
     public String getResponseString(boolean error) {
         return "ok";
+    }
+
+    @CommandPacketFactory
+    public class SenderPacketFactory implements PacketFactory<SenderPacket> {
+
+        @Override
+        public SenderPacket create(String data) {
+            return new SenderPacket().parseString(data);
+        }
     }
 }

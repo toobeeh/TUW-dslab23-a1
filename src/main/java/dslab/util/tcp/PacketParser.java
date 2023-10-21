@@ -6,9 +6,7 @@ import dslab.data.annotations.CommandPacketId;
 import dslab.data.annotations.ProcessCommandPacket;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.stream.Stream;
 
 class InvalidPacketException extends Exception {
     public InvalidPacketException() {
@@ -33,10 +31,6 @@ public abstract class PacketParser {
 
     private HashMap<String, Method> packetHandlers = new HashMap<>();
     private HashMap<String, PacketFactory> packetFactories = new HashMap<>();
-
-    private interface CommandProcessorMethod {
-        public String commandProcessor(Packet packet);
-    }
 
     public PacketParser(){
 
