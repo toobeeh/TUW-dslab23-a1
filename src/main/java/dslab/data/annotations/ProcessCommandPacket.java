@@ -7,6 +7,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * An annotation that gives a packet an identifier.
+ * This identifier should be the token which starts the commands in the
+ * used protocol.
+ */
 @Retention(RetentionPolicy.RUNTIME) // This annotation should be retained at runtime
 @Target(ElementType.METHOD) // This annotation can be applied to methods
 public @interface ProcessCommandPacket {
