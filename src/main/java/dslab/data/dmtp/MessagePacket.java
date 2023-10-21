@@ -5,7 +5,6 @@ import dslab.data.annotations.CommandPacketFactory;
 import dslab.data.annotations.CommandPacketId;
 
 @CommandPacketId("data")
-@CommandPacketFactory(MessagePacket.MessagePacketFactory.class)
 public class MessagePacket implements Packet<MessagePacket> {
 
     public String message;
@@ -27,6 +26,7 @@ public class MessagePacket implements Packet<MessagePacket> {
         return error ? "error no recipients" : "ok";
     }
 
+    @CommandPacketFactory
     public static class MessagePacketFactory implements PacketFactory<MessagePacket> {
         @Override
         public MessagePacket create(String data) {

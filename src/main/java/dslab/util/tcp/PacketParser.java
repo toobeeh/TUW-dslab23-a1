@@ -6,7 +6,9 @@ import dslab.data.annotations.CommandPacketId;
 import dslab.data.annotations.ProcessCommandPacket;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.stream.Stream;
 
 class InvalidPacketException extends Exception {
     public InvalidPacketException() {
@@ -37,10 +39,14 @@ public abstract class PacketParser {
                 var processorAnnotation = method.getAnnotation(ProcessCommandPacket.class);
                 Class<? extends Packet> packetType = processorAnnotation.value();
 
+
                 // get the factory for that packet type
-                var processorFactory = packetType.getAnnotation(CommandPacketFactory.class);
-                if(processorFactory == null) throw new RuntimeException("No factory annotation present for packet class");
-                Class<? extends PacketFactory> packetFactory = processorFactory.value();
+                Class<? extends PacketFactory> packetFactory = null;
+                var classes = packetType.getClasses();
+                for(Class clazz : classes){
+                    if(clazz.getAnnotation(CommandPacketFactory.class) != null) packetFactory = clazz;
+                }
+                if(packetFactory == null) throw new RuntimeException("No factory annotation present for packet class");
                 validateCommandPacketFactory(packetFactory, packetType);
 
                 // get the identification of the packet
@@ -100,6 +106,8 @@ public abstract class PacketParser {
     }
 
     private void validateCommandPacketFactory(Class<? extends PacketFactory> candidate, Class<? extends Packet> packetType) {
+
+        if(!PacketFactory.class.isAssignableFrom(candidate)) throw new IllegalArgumentException("packet factory needs to implement packetfactory interface");
 
         try {
             var constructorParamTypes = candidate.getConstructor().getParameterTypes();

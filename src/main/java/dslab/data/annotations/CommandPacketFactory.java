@@ -10,5 +10,4 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME) // This annotation should be retained at runtime
 @Target(ElementType.TYPE) // This annotation can be applied to classes
 public @interface CommandPacketFactory {
-    Class<? extends PacketFactory> value(); // The attribute to store the identification name
 }

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @CommandPacketId("to")
-@CommandPacketFactory(ReceiverPacket.ReceiverPacketFactory.class)
 public class ReceiverPacket implements Packet<ReceiverPacket> {
 
     public List<String> recipients;
@@ -34,11 +33,11 @@ public class ReceiverPacket implements Packet<ReceiverPacket> {
         return "ok " + this.recipients.size();
     }
 
-
-    public static class ReceiverPacketFactory implements PacketFactory<MessagePacket> {
+    @CommandPacketFactory
+    public static class ReceiverPacketFactory implements PacketFactory<ReceiverPacket> {
         @Override
-        public MessagePacket create(String data) {
-            return new MessagePacket().parseString(data);
+        public ReceiverPacket create(String data) {
+            return new ReceiverPacket().parseString(data);
         }
     }
 }
