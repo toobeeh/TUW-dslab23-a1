@@ -6,7 +6,6 @@ import dslab.data.annotations.ProcessCommandPacket;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.ProtocolException;
 import java.util.HashMap;
 
 
@@ -19,7 +18,8 @@ import java.util.HashMap;
  * The handler methods have to be implemented in the deriving class.
  * Each handler needs an annotation ProcessCommandPacket which
  * registers the handler specifically for this packet type.
- * Handlers need to return strings.
+ * Handlers can either return string or void (which will
+ * produce the packet's default response)
  * The deriving classes effectively implement a specific
  * protocol which connect handlers with state.
  *
@@ -60,20 +60,7 @@ public abstract class PacketProtocol {
 
                 // register handler and factory
                 this.packetFactories.put(identification, getPacketFactory(packetType));
-                this.packetHandlers.put(identification, data -> {
-                    try {
-                        return method.invoke(this, data).toString();
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException(e);
-                    } catch (InvocationTargetException e) {
-
-                        // check if exception was a processing exception and hand over
-                        if(e.getTargetException() instanceof PacketProcessException) {
-                            throw (PacketProcessException) e.getTargetException();
-                        }
-                        throw new RuntimeException(e);
-                    }
-                });
+                this.packetHandlers.put(identification, getPacketHandler(method));
             }
         }
     }
@@ -107,7 +94,9 @@ public abstract class PacketProtocol {
 
         String result;
         try {
+            // handle packet and use packet response if no other return provided by handler
             result = handler.handle(packet);
+            if(result == null) result = packet.getResponseString();
         }
         catch(PacketProcessException e) {
 
@@ -143,8 +132,8 @@ public abstract class PacketProtocol {
         if(paramTypes.length != 1 || paramTypes.length > 0 && !Packet.class.isAssignableFrom(paramTypes[0])){
             throw new IllegalArgumentException("packet processor must only have exactly one argument of type Packet");
         }
-        if(!String.class.isAssignableFrom(candidate.getReturnType())){
-            throw new IllegalArgumentException("packet processor must only return a string");
+        if(!String.class.isAssignableFrom(candidate.getReturnType()) && !candidate.getReturnType().equals(void.class)){
+            throw new IllegalArgumentException("packet processor must only return a string or void");
         }
     }
 
@@ -186,5 +175,28 @@ public abstract class PacketProtocol {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * builds a lambda that invokes a packet handler and returns its result
+     * @param method the handler method
+     * @return
+     */
+    private PacketHandler getPacketHandler(Method method){
+        return data -> {
+            try {
+                var result = method.invoke(this, data);
+                return result == null ? null : result.toString();
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            } catch (InvocationTargetException e) {
+
+                // check if exception was a processing exception and hand over
+                if(e.getTargetException() instanceof PacketProcessException) {
+                    throw (PacketProcessException) e.getTargetException();
+                }
+                throw new RuntimeException(e);
+            }
+        };
     }
 }

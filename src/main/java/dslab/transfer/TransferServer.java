@@ -34,7 +34,7 @@ public class TransferServer implements ITransferServer, Runnable {
         try{
 
             var protocol = new DMTP();
-            var result = protocol.handle("subject hi");
+            var result = protocol.handle("begin");
 
             System.out.println(result);
         }
