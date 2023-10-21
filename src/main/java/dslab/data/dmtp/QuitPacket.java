@@ -6,7 +6,7 @@ import dslab.data.annotations.CommandPacketId;
 
 @CommandPacketId("quit")
 public class QuitPacket implements Packet<QuitPacket> {
-    public QuitPacket parseString(String data){
+    public QuitPacket parseString(String data) throws PacketParseException {
         if(!data.equals("quit")) throw new PacketParseException();
         return new QuitPacket();
     }
@@ -17,7 +17,7 @@ public class QuitPacket implements Packet<QuitPacket> {
     }
 
     @Override
-    public String getResponseString(boolean error) {
+    public String getResponseString() {
         return "ok bye";
     }
 }

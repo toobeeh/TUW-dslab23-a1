@@ -6,7 +6,7 @@ import dslab.data.annotations.CommandPacketId;
 
 @CommandPacketId("begin")
 public class BeginPacket implements Packet<BeginPacket> {
-    public BeginPacket parseString(String data){
+    public BeginPacket parseString(String data) throws PacketParseException {
         if(!data.equals("begin")) throw new PacketParseException();
         return this;
     }
@@ -16,8 +16,4 @@ public class BeginPacket implements Packet<BeginPacket> {
         return "begin";
     }
 
-    @Override
-    public String getResponseString(boolean error) {
-        return "ok";
-    }
 }

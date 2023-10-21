@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class ReceiverPacket implements Packet<ReceiverPacket> {
 
     public List<String> recipients;
-    public ReceiverPacket parseString(String data){
+    public ReceiverPacket parseString(String data) throws PacketParseException {
         var tokens = data.split(" ");
         if(!(tokens.length == 2) || !tokens[0].equals("to")) throw new PacketParseException();
 
@@ -26,7 +26,7 @@ public class ReceiverPacket implements Packet<ReceiverPacket> {
     }
 
     @Override
-    public String getResponseString(boolean error) {
+    public String getResponseString() {
         return "ok " + this.recipients.size();
     }
 }

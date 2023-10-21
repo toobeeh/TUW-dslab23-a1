@@ -8,7 +8,7 @@ import dslab.data.annotations.CommandPacketId;
 public class SenderPacket implements Packet<SenderPacket> {
 
     public String sender;
-    public SenderPacket parseString(String data){
+    public SenderPacket parseString(String data) throws PacketParseException {
         var tokens = data.split(" ");
         if(!(tokens.length == 2) || !tokens[0].equals("from")) throw new PacketParseException();
 
@@ -21,8 +21,4 @@ public class SenderPacket implements Packet<SenderPacket> {
         return "from " + this.sender;
     }
 
-    @Override
-    public String getResponseString(boolean error) {
-        return "ok";
-    }
 }

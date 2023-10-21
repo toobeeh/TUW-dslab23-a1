@@ -10,9 +10,9 @@ public class SubjectPacket implements Packet<SubjectPacket> {
     public String subject;
 
     @Override
-    public SubjectPacket parseString(String data){
+    public SubjectPacket parseString(String data) throws PacketParseException {
         var tokens = data.split(" ");
-        if(tokens.length < 2 || !tokens[0].equals("subject")) throw new PacketParseException();
+        if(tokens.length < 2 || !tokens[0].equals("subject")) throw new PacketParseException("no subject");
 
         this.subject = data.substring(8);
         return this;
@@ -24,7 +24,7 @@ public class SubjectPacket implements Packet<SubjectPacket> {
     }
 
     @Override
-    public String getResponseString(boolean error) {
+    public String getResponseString() {
         return "ok";
     }
 }

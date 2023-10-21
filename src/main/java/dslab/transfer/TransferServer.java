@@ -2,10 +2,7 @@ package dslab.transfer;
 
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Arrays;
 
-import dslab.ComponentFactory;
-import dslab.data.dmtp.MessagePacket;
 import dslab.util.Config;
 
 public class TransferServer implements ITransferServer, Runnable {
@@ -36,8 +33,8 @@ public class TransferServer implements ITransferServer, Runnable {
 
         try{
 
-            var parser = new DMTPParser();
-            var result = parser.parse("subject hi");
+            var protocol = new DMTP();
+            var result = protocol.handle("subject hi");
 
             System.out.println(result);
         }

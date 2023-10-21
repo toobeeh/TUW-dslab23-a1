@@ -7,7 +7,7 @@ import dslab.data.annotations.CommandPacketId;
 public class MessagePacket implements Packet<MessagePacket> {
 
     public String message;
-    public MessagePacket parseString(String data){
+    public MessagePacket parseString(String data) throws PacketParseException {
         var tokens = data.split(" ");
         if(tokens.length < 2 || !tokens[0].equals("data")) throw new PacketParseException();
 
@@ -20,8 +20,4 @@ public class MessagePacket implements Packet<MessagePacket> {
         return "data " + this.message;
     }
 
-    @Override
-    public String getResponseString(boolean error) {
-        return error ? "error no recipients" : "ok";
-    }
 }

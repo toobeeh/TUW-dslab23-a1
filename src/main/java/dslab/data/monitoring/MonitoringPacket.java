@@ -17,7 +17,7 @@ public class MonitoringPacket implements Packet<MonitoringPacket> {
     }
 
     @Override
-    public String getResponseString(boolean error) {
+    public String getResponseString() {
         return null;
     }
 
