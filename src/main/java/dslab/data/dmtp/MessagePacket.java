@@ -1,9 +1,10 @@
 package dslab.data.dmtp;
 
 import dslab.data.*;
-import dslab.data.annotations.CommandPacketId;
+import dslab.data.annotations.CommandPacket;
+import dslab.data.exceptions.PacketParseException;
 
-@CommandPacketId("data")
+@CommandPacket("data")
 public class MessagePacket implements Packet<MessagePacket> {
 
     public String message;

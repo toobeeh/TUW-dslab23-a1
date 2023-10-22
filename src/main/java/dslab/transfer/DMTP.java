@@ -1,7 +1,7 @@
 package dslab.transfer;
 
-import dslab.data.PacketProcessException;
-import dslab.data.annotations.ProcessCommandPacket;
+import dslab.data.exceptions.PacketHandleException;
+import dslab.data.annotations.CommandPacketHandler;
 import dslab.data.dmtp.*;
 import dslab.util.tcp.PacketProtocol;
 
@@ -16,49 +16,49 @@ class Message {
 
 public class DMTP extends PacketProtocol {
     private Message message = null;
-    private Message getMessage() throws PacketProcessException {
-        if(this.message == null) throw new PacketProcessException("has not begun");
+    private Message getMessage() throws PacketHandleException {
+        if(this.message == null) throw new PacketHandleException("has not begun");
         return message;
     }
 
-    @ProcessCommandPacket(BeginPacket.class)
-    public void processBegin(BeginPacket packet) throws PacketProcessException {
-        if(message != null) throw new PacketProcessException("has already begun");
+    @CommandPacketHandler
+    public void handleBegin(BeginPacket packet) throws PacketHandleException {
+        if(message != null) throw new PacketHandleException("has already begun");
         message = new Message();
     }
 
-    @ProcessCommandPacket(MessagePacket.class)
-    public void processData(MessagePacket packet) throws PacketProcessException {
+    @CommandPacketHandler
+    public void handleData(MessagePacket packet) throws PacketHandleException {
         this.getMessage().message = packet.message;
     }
 
-    @ProcessCommandPacket(SenderPacket.class)
-    public void processSender(SenderPacket packet) throws PacketProcessException {
+    @CommandPacketHandler
+    public void handleSender(SenderPacket packet) throws PacketHandleException {
         this.getMessage().sender = packet.sender;
     }
 
-    @ProcessCommandPacket(ReceiverPacket.class)
-    public void processRecipients(ReceiverPacket packet) throws PacketProcessException {
+    @CommandPacketHandler
+    public void handleRecipients(ReceiverPacket packet) throws PacketHandleException {
         this.getMessage().recipients = packet.recipients;
     }
 
-    @ProcessCommandPacket(SubjectPacket.class)
-    public void processSubject(SubjectPacket packet) throws PacketProcessException {
+    @CommandPacketHandler
+    public void handleSubject(SubjectPacket packet) throws PacketHandleException {
         this.getMessage().subject = packet.subject;
     }
 
-    @ProcessCommandPacket(SendPacket.class)
-    public void processSend(SendPacket packet) throws PacketProcessException {
+    @CommandPacketHandler
+    public void handleSend(SendPacket packet) throws PacketHandleException {
         var message = this.getMessage();
-        if(message.sender == null) throw new PacketProcessException("no sender");
-        if(message.subject == null) throw new PacketProcessException("no subject");
-        if(message.message == null) throw new PacketProcessException("no data");
-        if(message.recipients == null) throw new PacketProcessException("no recipients");
+        if(message.sender == null) throw new PacketHandleException("no sender");
+        if(message.subject == null) throw new PacketHandleException("no subject");
+        if(message.message == null) throw new PacketHandleException("no data");
+        if(message.recipients == null) throw new PacketHandleException("no recipients");
         this.message = null;
     }
 
-    @ProcessCommandPacket(QuitPacket.class)
-    public String processQuit(QuitPacket packet) {
+    @CommandPacketHandler
+    public String handleQuit(QuitPacket packet) {
         // quit
         return "example custom return";
     }

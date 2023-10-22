@@ -1,8 +1,11 @@
 package dslab.util.tcp;
 
 import dslab.data.*;
-import dslab.data.annotations.CommandPacketId;
-import dslab.data.annotations.ProcessCommandPacket;
+import dslab.data.annotations.CommandPacket;
+import dslab.data.annotations.CommandPacketHandler;
+import dslab.data.exceptions.PacketParseException;
+import dslab.data.exceptions.PacketHandleException;
+import dslab.data.exceptions.PacketProtocolException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -32,7 +35,7 @@ public abstract class PacketProtocol {
     }
 
     interface PacketHandler<TPacket extends Packet> {
-        String handle(TPacket packet) throws PacketProcessException;
+        String handle(TPacket packet) throws PacketHandleException;
     }
 
     private HashMap<String, PacketHandler> packetHandlers = new HashMap<>();
@@ -43,18 +46,16 @@ public abstract class PacketProtocol {
         // get packet handlers
         Method[] methods = this.getClass().getMethods();
         for (Method method : methods) {
-            if (method.isAnnotationPresent(ProcessCommandPacket.class)) {
+            if (method.isAnnotationPresent(CommandPacketHandler.class)) {
 
                 // check if method signature is valid
-                validateCommandPacketProcessor(method);
+                var packetType = validateCommandPacketHandler(method);
 
-                // get packet type that the method handles (annotation is present as of previous if statement)
-                var processorAnnotation = method.getAnnotation(ProcessCommandPacket.class);
-                Class<? extends Packet> packetType = processorAnnotation.value();
+                // validate packet type that the method handles
                 validateCommandPacketType(packetType);
 
                 // get the identification of the packet
-                var packetIdentification = packetType.getAnnotation(CommandPacketId.class);
+                var packetIdentification = packetType.getAnnotation(CommandPacket.class);
                 if(packetIdentification == null) throw new RuntimeException("No identification annotation present for packet class");
                 String identification = packetIdentification.value();
 
@@ -83,7 +84,7 @@ public abstract class PacketProtocol {
             // handle parsing errors
             return "error " + e.getResponseString();
         }
-        String identification = packet.getClass().getAnnotation(CommandPacketId.class).value(); // is present as of constructor checks
+        String identification = packet.getClass().getAnnotation(CommandPacket.class).value(); // is present as of constructor checks
 
         // the handler should have the right signature as it is checked in the constructor
         // if no handler, its a protocol error
@@ -98,7 +99,7 @@ public abstract class PacketProtocol {
             result = handler.handle(packet);
             if(result == null) result = packet.getResponseString();
         }
-        catch(PacketProcessException e) {
+        catch(PacketHandleException e) {
 
             // if packet could not be processed, return error message
             return "error " + e.getResponseString();
@@ -126,7 +127,7 @@ public abstract class PacketProtocol {
      * validates a found packet handler method
      * @param candidate a packet processor/handler method
      */
-    private void validateCommandPacketProcessor(Method candidate){
+    private Class<? extends Packet> validateCommandPacketHandler(Method candidate){
 
         var paramTypes = candidate.getParameterTypes();
         if(paramTypes.length != 1 || paramTypes.length > 0 && !Packet.class.isAssignableFrom(paramTypes[0])){
@@ -135,6 +136,7 @@ public abstract class PacketProtocol {
         if(!String.class.isAssignableFrom(candidate.getReturnType()) && !candidate.getReturnType().equals(void.class)){
             throw new IllegalArgumentException("packet processor must only return a string or void");
         }
+        return (Class<? extends Packet>) paramTypes[0];
     }
 
     /**
@@ -180,7 +182,7 @@ public abstract class PacketProtocol {
     /**
      * builds a lambda that invokes a packet handler and returns its result
      * @param method the handler method
-     * @return
+     * @return a lambda which invokes the handler
      */
     private PacketHandler getPacketHandler(Method method){
         return data -> {
@@ -192,8 +194,8 @@ public abstract class PacketProtocol {
             } catch (InvocationTargetException e) {
 
                 // check if exception was a processing exception and hand over
-                if(e.getTargetException() instanceof PacketProcessException) {
-                    throw (PacketProcessException) e.getTargetException();
+                if(e.getTargetException() instanceof PacketHandleException) {
+                    throw (PacketHandleException) e.getTargetException();
                 }
                 throw new RuntimeException(e);
             }

@@ -1,7 +1,5 @@
 package dslab.data.annotations;
 
-import dslab.data.Packet;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -13,7 +11,7 @@ import java.lang.annotation.Target;
  * used protocol.
  */
 @Retention(RetentionPolicy.RUNTIME) // This annotation should be retained at runtime
-@Target(ElementType.METHOD) // This annotation can be applied to methods
-public @interface ProcessCommandPacket {
-    Class<? extends Packet> value(); // The attribute to store the identification name
+@Target(ElementType.TYPE) // This annotation can be applied to classes
+public @interface CommandPacket {
+    String value(); // The command name of the packet (first index of content.split(" "))
 }

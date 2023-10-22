@@ -1,4 +1,4 @@
-package dslab.data;
+package dslab.data.exceptions;
 
 /**
  * An exception that occurs when parsing a packet;

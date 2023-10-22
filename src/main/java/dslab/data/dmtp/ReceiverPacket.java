@@ -1,14 +1,14 @@
 package dslab.data.dmtp;
 
 import dslab.data.Packet;
-import dslab.data.PacketParseException;
-import dslab.data.annotations.CommandPacketId;
+import dslab.data.exceptions.PacketParseException;
+import dslab.data.annotations.CommandPacket;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@CommandPacketId("to")
+@CommandPacket("to")
 public class ReceiverPacket implements Packet<ReceiverPacket> {
 
     public List<String> recipients;

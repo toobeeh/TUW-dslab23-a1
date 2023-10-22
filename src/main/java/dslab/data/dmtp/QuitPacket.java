@@ -1,10 +1,10 @@
 package dslab.data.dmtp;
 
 import dslab.data.Packet;
-import dslab.data.PacketParseException;
-import dslab.data.annotations.CommandPacketId;
+import dslab.data.exceptions.PacketParseException;
+import dslab.data.annotations.CommandPacket;
 
-@CommandPacketId("quit")
+@CommandPacket("quit")
 public class QuitPacket implements Packet<QuitPacket> {
     public QuitPacket parseString(String data) throws PacketParseException {
         if(!data.equals("quit")) throw new PacketParseException();

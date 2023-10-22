@@ -1,10 +1,10 @@
 package dslab.data.dmtp;
 
 import dslab.data.Packet;
-import dslab.data.PacketParseException;
-import dslab.data.annotations.CommandPacketId;
+import dslab.data.exceptions.PacketParseException;
+import dslab.data.annotations.CommandPacket;
 
-@CommandPacketId("send")
+@CommandPacket("send")
 public class SendPacket implements Packet<SendPacket> {
     public SendPacket parseString(String data) throws PacketParseException {
         if(!data.equals("send")) throw new PacketParseException();

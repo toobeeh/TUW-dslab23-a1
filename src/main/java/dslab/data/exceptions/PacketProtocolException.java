@@ -1,4 +1,4 @@
-package dslab.data;
+package dslab.data.exceptions;
 
 /**
  * An exception that occurs when a received packet is not part of the protocol

@@ -1,10 +1,10 @@
 package dslab.data.dmtp;
 
 import dslab.data.Packet;
-import dslab.data.PacketParseException;
-import dslab.data.annotations.CommandPacketId;
+import dslab.data.exceptions.PacketParseException;
+import dslab.data.annotations.CommandPacket;
 
-@CommandPacketId("subject")
+@CommandPacket("subject")
 public class SubjectPacket implements Packet<SubjectPacket> {
 
     public String subject;

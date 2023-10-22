@@ -2,6 +2,7 @@ package dslab.transfer;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Scanner;
 
 import dslab.util.Config;
 
@@ -32,11 +33,12 @@ public class TransferServer implements ITransferServer, Runnable {
     public static void main(String[] args) throws Exception {
 
         try{
-
+            Scanner s = new Scanner((System.in));
             var protocol = new DMTP();
-            var result = protocol.handle("begin");
-
-            System.out.println(result);
+            while(true) {
+                var command = s.nextLine();
+                System.out.println(protocol.handle(command));
+            }
         }
         catch (Exception e){
             System.err.println(e);
