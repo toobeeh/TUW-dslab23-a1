@@ -7,20 +7,27 @@ import dslab.util.tcp.PacketProtocol;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
-class Message {
-    String subject;
-    String sender;
-    String message;
-    List<String> recipients;
-}
+/**
+ * A class that models the flow of a DMTP connection
+ */
+public class DMTPServer extends PacketProtocol {
 
-public class DMTP extends PacketProtocol {
+    class Message {
+        String subject;
+        String sender;
+        String message;
+        List<String> recipients;
+    }
     private Message message = null;
     private Message getMessage() throws PacketHandleException {
         if(this.message == null) throw new PacketHandleException("has not begun");
         return message;
     }
+
+    public Consumer<Message> onMessageSent;
 
     @CommandPacketHandler
     public void handleBegin(BeginPacket packet) throws PacketHandleException {
@@ -56,11 +63,12 @@ public class DMTP extends PacketProtocol {
         if(message.message == null) throw new PacketHandleException("no data");
         if(message.recipients == null) throw new PacketHandleException("no recipients");
         this.message = null;
+        if(onMessageSent != null) onMessageSent.accept(message);
     }
 
     @CommandPacketHandler
     public void handleQuit(QuitPacket packet) throws ProtocolCloseException {
-        throw new ProtocolCloseException("ok bye");
+        throw new ProtocolCloseException(new OkPacket().withMessage("bye"));
     }
 
     @Override

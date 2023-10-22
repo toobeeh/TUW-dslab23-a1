@@ -24,9 +24,4 @@ public class SubjectPacket implements Packet<SubjectPacket> {
     public String toPacketString() {
         return "subject " + this.subject;
     }
-
-    @Override
-    public String getResponseString() {
-        return "ok";
-    }
 }

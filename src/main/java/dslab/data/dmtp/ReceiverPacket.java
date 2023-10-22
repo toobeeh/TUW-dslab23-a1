@@ -27,8 +27,11 @@ public class ReceiverPacket implements Packet<ReceiverPacket> {
         return "to " + this.recipients.stream().collect(Collectors.joining(","));
     }
 
+
     @Override
-    public String getResponseString() {
-        return "ok " + this.recipients.size();
+    public Packet getResponsePacket() {
+        var ok = new OkPacket();
+        ok.message = recipients.size() + "";
+        return ok;
     }
 }

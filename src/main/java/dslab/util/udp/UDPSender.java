@@ -19,10 +19,14 @@ public class UDPSender {
         this.receiverPort = receiverPort;
     }
 
-    public void send(String message) throws IOException {
-        byte[] buffer = message.getBytes("UTF-8");
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.receiverAddress, this.receiverPort);
-        this.socket.send(packet);
+    public void send(String message) {
+        try {
+            byte[] buffer = message.getBytes("UTF-8");
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.receiverAddress, this.receiverPort);
+            this.socket.send(packet);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

@@ -18,7 +18,9 @@ public class QuitPacket implements Packet<QuitPacket> {
     }
 
     @Override
-    public String getResponseString() {
-        return "ok bye";
+    public Packet getResponsePacket() {
+        var ok = new OkPacket();
+        ok.message = "bye";
+        return ok;
     }
 }
