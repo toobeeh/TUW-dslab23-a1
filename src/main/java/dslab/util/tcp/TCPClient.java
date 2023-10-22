@@ -1,21 +1,24 @@
 package dslab.util.tcp;
 
-import at.ac.tuwien.dsg.orvell.Shell;
+import dslab.data.Packet;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 public class TCPClient implements Runnable {
 
     private Socket clientSocket;
     private BufferedReader input;
     private PrintWriter output;
-    private PacketReceivedCallback callback;
+    public Consumer<String> onDataReceived = null;
+    public Runnable onSocketShutdown = null;
+    public Runnable onSocketReady = null;
     private boolean stopped = false;
 
-    public TCPClient(Socket clientSocket, PacketReceivedCallback callback) throws IOException {
+    public TCPClient(Socket clientSocket) {
         this.clientSocket = clientSocket;
-        this.callback = callback;
     }
 
     @Override
@@ -29,13 +32,24 @@ public class TCPClient implements Runnable {
             throw new RuntimeException(e);
         }
 
+        if(onSocketReady != null) onSocketReady.run();
+
         while(!this.stopped){
             try {
-                this.callback.onPacketReceived(input.readLine());
+                var line = input.readLine();
+                if(onDataReceived != null) onDataReceived.accept(line);
             } catch (IOException e) {
-                System.err.println(e);
+                this.shutdown();
             }
         }
+    }
+
+    public void send(String data) {
+        this.output.println(data);
+    }
+
+    public void send(Packet packet) {
+        this.output.println(packet.toPacketString());
     }
 
     public void shutdown(){
@@ -52,9 +66,6 @@ public class TCPClient implements Runnable {
         } catch (IOException e) {
             System.err.println(e);
         }
-    }
-
-    public interface PacketReceivedCallback {
-        void onPacketReceived(String data);
+        if(onSocketShutdown != null) onSocketShutdown.run();
     }
 }

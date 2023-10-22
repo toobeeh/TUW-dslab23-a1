@@ -4,6 +4,7 @@ import dslab.data.exceptions.PacketHandleException;
 import dslab.data.annotations.CommandPacketHandler;
 import dslab.data.dmtp.*;
 import dslab.util.tcp.PacketProtocol;
+import dslab.util.tcp.exceptions.ProtocolCloseException;
 
 import java.util.List;
 
@@ -58,8 +59,12 @@ public class DMTP extends PacketProtocol {
     }
 
     @CommandPacketHandler
-    public String handleQuit(QuitPacket packet) {
-        // quit
-        return "example custom return";
+    public void handleQuit(QuitPacket packet) throws ProtocolCloseException {
+        throw new ProtocolCloseException("ok bye");
+    }
+
+    @Override
+    protected boolean protocolErrorIsFatal() {
+        return true;
     }
 }
