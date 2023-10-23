@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class Message implements Cloneable {
     private static final String EMAIL_REGEX =
-            "^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+)\\.[A-Za-z]+";
+            "^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+)";
     public static boolean isValidEmail(String email){
         Pattern pattern = Pattern.compile(EMAIL_REGEX);
         Matcher matcher = pattern.matcher(email);
