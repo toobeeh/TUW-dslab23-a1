@@ -2,8 +2,8 @@ package dslab.util;
 
 import dslab.data.Packet;
 import dslab.data.dmtp.*;
-import dslab.transfer.DMTPServer;
 import dslab.util.tcp.PacketProtocol;
+import dslab.util.tcp.dmtp.DMTPServerModel;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ public class PacketSequence {
         return packets.size() == 0;
     }
 
-    public static PacketSequence fromMessage(DMTPServer.Message message){
+    public static PacketSequence fromMessage(DMTPServerModel.Message message){
 
         var begin = new BeginPacket();
         var sender = new SenderPacket();

@@ -1,4 +1,4 @@
-package dslab.transfer;
+package dslab.util.tcp.dmtp;
 
 import dslab.data.exceptions.PacketHandleException;
 import dslab.data.annotations.CommandPacketHandler;
@@ -7,13 +7,12 @@ import dslab.util.tcp.PacketProtocol;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
  * A class that models the flow of a DMTP connection
  */
-public class DMTPServer extends PacketProtocol {
+public class DMTPServerModel extends PacketProtocol {
 
     public class Message {
         public String subject;

@@ -1,21 +1,15 @@
-package dslab.transfer;
+package dslab.util.tcp.dmtp;
 
 import dslab.data.annotations.CommandPacketHandler;
 import dslab.data.dmtp.*;
-import dslab.data.exceptions.PacketHandleException;
-import dslab.data.exceptions.PacketProtocolException;
 import dslab.util.tcp.PacketProtocol;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
-
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 /**
  * A class that models the flow of a DMTP connection on client-side
  * Does nothing but register accepted packets and check if fist Ok packet validates protocol
  */
-public class DMTPClient extends PacketProtocol {
+public class DMTPClientModel extends PacketProtocol {
     public boolean isValidated() {
         return validated;
     }

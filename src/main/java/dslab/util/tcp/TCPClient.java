@@ -46,9 +46,11 @@ public class TCPClient implements Runnable {
         while(!this.stopped){
             try {
                 var line = input.readLine();
-                System.out.println(">>> " + line);
                 if(line == null) this.shutdown();
-                else if(onDataReceived != null) onDataReceived.accept(line);
+                else if(onDataReceived != null) {
+                    System.out.println(clientSocket.getInetAddress().toString() + " >>> " + line);
+                    onDataReceived.accept(line);
+                }
             } catch (IOException e) {
                 this.shutdown();
             }
@@ -56,7 +58,7 @@ public class TCPClient implements Runnable {
     }
 
     public void send(String data) {
-        System.out.println("<<< " + data);
+        System.out.println(clientSocket.getInetAddress().toString() + " <<< " + data);
         this.output.println(data);
     }
 
@@ -65,7 +67,6 @@ public class TCPClient implements Runnable {
     }
 
     public synchronized void shutdown(){
-        System.out.println("closing");
         if(stopped) return;
         this.stopped = true;
 

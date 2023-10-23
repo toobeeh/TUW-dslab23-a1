@@ -14,11 +14,12 @@ public class TCPPooledServer implements Runnable {
     private WorkerFactory workerFactory;
     private int port;
     private Thread thread;
-    private ExecutorService threadPool = Executors.newCachedThreadPool();
+    private ExecutorService threadPool;
 
-    public TCPPooledServer(int port, WorkerFactory workerFactory){
+    public TCPPooledServer(int port, WorkerFactory workerFactory, ExecutorService executorService){
         this.port = port;
         this.workerFactory = workerFactory;
+        this.threadPool = executorService;
     }
 
     @Override
@@ -41,28 +42,6 @@ public class TCPPooledServer implements Runnable {
             }
             this.threadPool.execute(this.workerFactory.createWorker(clientSocket));
         }
-
-        this.threadPool.shutdown();
-    }
-
-    /**
-     * creates a new client socket to a TCP server and runs it in the thread pool
-     * @param host the target server host
-     * @param port the target server TCP port
-     * @return the client handle, containing the instance and a
-     * callable to start the client in the thread pool
-     */
-    public TCPClientHandle createNewTCPSocket(String host, int port){
-        Socket socket = null;
-        try {
-            socket = new Socket(host, port);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        var client = new TCPClient(socket);
-        var handle = new TCPClientHandle(() -> threadPool.execute(client), client);
-        return handle;
     }
 
     public void shutdown() {
