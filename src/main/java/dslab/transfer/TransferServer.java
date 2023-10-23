@@ -6,6 +6,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import at.ac.tuwien.dsg.orvell.Shell;
+import at.ac.tuwien.dsg.orvell.StopShellException;
+import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
 import dslab.data.monitoring.MonitoringPacket;
 import dslab.mailbox.MessageDispatcher;
@@ -20,8 +23,10 @@ import dslab.util.udp.UDPSender;
 
 public class TransferServer implements ITransferServer, Runnable {
 
+    private Shell shell;
     private DMTPServer dmtpServer;
     private MessageDispatcher messageDispatcher;
+    private Thread dispatcherThread;
     private ExecutorService threadPool = Executors.newCachedThreadPool();
 
     /**
@@ -38,20 +43,30 @@ public class TransferServer implements ITransferServer, Runnable {
         var monitoringPort = config.getInt("monitoring.port");
 
         messageDispatcher = new MessageDispatcher("transfer.one", port, monitoringHost, monitoringPort, threadPool);
+        dispatcherThread = new Thread(messageDispatcher, "Message Dispatcher");
+        dispatcherThread.start();
         dmtpServer = new DMTPServer(port, threadPool);
 
         dmtpServer.onMessageReceived = message -> messageDispatcher.handleMessage(message);
+
+        this.shell = new Shell(in, out);
+        this.shell.setPrompt(componentId + "> ");
+        this.shell.register(this);
     }
 
     @Override
     public void run() {
         this.dmtpServer.run();
+        this.shell.run();
     }
 
     @Override
+    @Command
     public void shutdown() {
+        this.dispatcherThread.stop();
         this.dmtpServer.shutdown();
         this.threadPool.shutdown();
+        throw new StopShellException();
     }
 
     public static void main(String[] args) throws Exception {

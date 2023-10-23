@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-public class MessageDispatcher {
+public class MessageDispatcher implements Runnable {
 
     private String idHost;
     private int idPort;
@@ -160,10 +160,6 @@ public class MessageDispatcher {
         return result;
     }
 
-    private void sendDeliveryFailedMessage(Message originalMessage, String error){
-
-    }
-
     /**
      * creates a new client socket to a TCP server and runs it in the thread pool
      * @param host the target server host
@@ -184,4 +180,8 @@ public class MessageDispatcher {
         return handle;
     }
 
+    @Override
+    public void run() {
+
+    }
 }
