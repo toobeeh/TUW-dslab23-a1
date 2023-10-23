@@ -55,6 +55,8 @@ public class TCPClient implements Runnable {
                 this.shutdown();
             }
         }
+
+        shutdown();
     }
 
     public void send(String data) {
@@ -78,7 +80,7 @@ public class TCPClient implements Runnable {
         }
 
         try {
-            this.clientSocket.close();
+            if(!clientSocket.isClosed()) clientSocket.close();
         } catch (IOException e) {
             System.err.println(e);
         }

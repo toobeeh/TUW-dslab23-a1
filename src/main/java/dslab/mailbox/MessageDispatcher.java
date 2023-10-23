@@ -1,14 +1,13 @@
 package dslab.mailbox;
 
-import dslab.data.dmtp.ErrorPacket;
 import dslab.data.monitoring.MonitoringPacket;
+import dslab.util.Message;
 import dslab.util.PacketSequence;
 import dslab.util.dns.DNS;
 import dslab.util.dns.DomainNameNotFoundException;
 import dslab.util.tcp.TCPClient;
 import dslab.util.tcp.TCPClientHandle;
 import dslab.util.tcp.dmtp.DMTPClientModel;
-import dslab.util.tcp.dmtp.DMTPServerModel;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
 import java.io.IOException;
@@ -16,7 +15,12 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 public class MessageDispatcher {
 
@@ -44,16 +48,56 @@ public class MessageDispatcher {
      * Senda a message to the recipient's mailboxes and to the monitoring server for logging
      * @param message an incoming message
      */
-    public void handleMessage(DMTPServerModel.Message message) {
+    public void handleMessage(Message message) {
         reportMessageToMonitoring(message);
-        sendMessageToMailbox(message);
+
+        var results = new ArrayList<CompletableFuture<String>>();
+
+        // split recipients by domains
+        var domains = message.getRecipientDomains();
+        for(var domain : domains.entrySet()) {
+
+            // build message only with recipients for domain
+            var concreteMessage = message.clone();
+            concreteMessage.recipients = domain.getValue().stream().map(user -> user + "@" + domain).collect(Collectors.toList());
+
+            // try to send message
+            try {
+                results.add(sendMessageToMailbox(concreteMessage, domain.getKey()));
+            } catch (DomainNameNotFoundException e) {
+
+                // unknown domain; result is all users are unknown
+                var result = new CompletableFuture<String>();
+                var users = String.join(", ", domain.getValue());
+                result.complete("error unknown domain " + domain.getKey() + " of " + users);
+                results.add(result);
+            }
+        }
+
+        // wait for results of all domain and if mailbox transfers failed, send the user a notification
+        CompletableFuture.allOf(results.toArray(new CompletableFuture[0])).thenRun(() -> {
+            List<String> errors = results.stream().map(result -> result.join()).filter(error -> error != null).collect(Collectors.toList());
+            if(errors.size() > 0){
+                String errorMessage = String.join(",", errors);
+                Message errorReport = new Message();
+                errorReport.recipients = List.of(message.sender);
+                errorReport.subject = "Failed to deliver message";
+                errorReport.sender = "mail@" + idHost;
+                errorReport.message = errorMessage;
+                try {
+                    sendMessageToMailbox(errorReport, message.sender.split("@")[1]);
+                } catch (DomainNameNotFoundException e) {
+                    // further errors are ignored
+                }
+            }
+        });
     }
 
     /**
      * sends an udp packet to the monitoring to collect stats about traffic
      * @param message the message which will be logged
      */
-    private void reportMessageToMonitoring(DMTPServerModel.Message message) {
+    private void reportMessageToMonitoring(Message message) {
         MonitoringPacket monitoring = new MonitoringPacket();
         monitoring.port = idPort;
         monitoring.host = idHost;
@@ -69,21 +113,19 @@ public class MessageDispatcher {
      * opens a new connection to a mailbox server and transfers the message via dmtp to it;
      * mailbox server is parsed from the recipients and resolved through dns
      * the socket will run in a thread taken from the thread pool
-     * @param message the message to transmit to the mailbox
+     * @param message the message to transmit to the mailbox; contains only users of the target domain
      */
-    private void sendMessageToMailbox(DMTPServerModel.Message message) {
+    private CompletableFuture<String> sendMessageToMailbox(Message message, String domain) throws DomainNameNotFoundException {
         InetSocketAddress mailboxAddress = null;
-        try {
-            mailboxAddress = dns.getDomainNameAddress("earth.planet");
-        } catch (DomainNameNotFoundException e) {
-            throw new RuntimeException("could not be delivered blah"); // TODO call reporting function
-        }
+        mailboxAddress = dns.getDomainNameAddress(domain);
         var clientHandle = connectToTcpSocket(mailboxAddress.getHostName(), mailboxAddress.getPort());
 
         // set up receiver protocol (to validate server responses) and message sequence to be sent
         var client = clientHandle.getClient();
         var protocol = new DMTPClientModel();
         var sequence = PacketSequence.fromMessage(message);
+
+        var result = new CompletableFuture<String>();
 
         client.onDataReceived = data -> {
             try {
@@ -94,15 +136,12 @@ public class MessageDispatcher {
                 }
                 else {
                     // let sequence check returned data with expected data
-                    var result = sequence.checkResponse(data, protocol);
+                    sequence.verifyResponse(data, protocol);
 
-                    // check if sequence has finished, and check if sequence result is truthy
+                    // check if sequence has finished (or errored and remaining were cleared)
                     if(sequence.hasFinished()){
                         client.shutdown();
-
-                        if(result instanceof ErrorPacket){
-                            throw new RuntimeException("could not be delivered blah"); // TODO call reporting function
-                        }
+                        result.complete(null); //success
                     }
 
                     // go ahead with next packet in sequence
@@ -112,12 +151,17 @@ public class MessageDispatcher {
                 }
             } catch (ProtocolCloseException e) {
                 client.shutdown();
-                throw new RuntimeException("could not be delivered blah"); // TODO call reporting function
+                result.complete(e.getResponsePacket().toPacketString());
             }
         };
 
         // start client after callbacks have initialized
         clientHandle.start();
+        return result;
+    }
+
+    private void sendDeliveryFailedMessage(Message originalMessage, String error){
+
     }
 
     /**

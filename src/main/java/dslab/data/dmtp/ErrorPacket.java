@@ -7,7 +7,7 @@ import dslab.data.exceptions.PacketProtocolException;
 
 @CommandPacket("error")
 public class ErrorPacket implements Packet<ErrorPacket> {
-    private String message;
+    public String message;
     public ErrorPacket parseString(String data) throws PacketProtocolException, PacketParseException {
         if(!data.equals("error")) throw new PacketProtocolException();
         if(data.length() <= 6 ) throw new PacketParseException("no message");

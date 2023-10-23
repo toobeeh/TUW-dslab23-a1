@@ -25,8 +25,8 @@ public class DMTPClientModel extends PacketProtocol {
     }
 
     @CommandPacketHandler
-    public void handleError(ErrorPacket error) {
-        // oh no
+    public void handleError(ErrorPacket error) throws ProtocolCloseException {
+        throw new ProtocolCloseException(new ErrorPacket().withMessage(error.message));
     }
 
     @Override

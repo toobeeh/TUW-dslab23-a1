@@ -4,6 +4,7 @@ import dslab.data.Packet;
 import dslab.data.exceptions.PacketParseException;
 import dslab.data.annotations.CommandPacket;
 import dslab.data.exceptions.PacketProtocolException;
+import dslab.util.Message;
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +20,9 @@ public class ReceiverPacket implements Packet<ReceiverPacket> {
         if(!(tokens.length == 2)) throw new PacketParseException("no recipients");
 
         this.recipients = Arrays.asList(tokens[1].split(","));
+        for(var recipient : recipients){
+            if(!Message.isValidEmail(recipient)) throw new PacketParseException("invalid address " + recipient);
+        }
         return this;
     }
 

@@ -3,6 +3,7 @@ package dslab.util.tcp.dmtp;
 import dslab.data.exceptions.PacketHandleException;
 import dslab.data.annotations.CommandPacketHandler;
 import dslab.data.dmtp.*;
+import dslab.util.Message;
 import dslab.util.tcp.PacketProtocol;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
@@ -14,12 +15,6 @@ import java.util.function.Consumer;
  */
 public class DMTPServerModel extends PacketProtocol {
 
-    public class Message {
-        public String subject;
-        public String sender;
-        public String message;
-        public List<String> recipients;
-    }
     private Message message = null;
     private Message getMessage() throws PacketHandleException {
         if(this.message == null) throw new PacketHandleException("has not begun");
@@ -60,10 +55,10 @@ public class DMTPServerModel extends PacketProtocol {
         // TODO remove
         if(this.message == null) {
             var m = new Message();
-            m.sender = "a";
-            m.recipients = List.of("b");
-            m.subject = "c";
-            m.message = "d";
+            m.sender = "tobi@earth.planet";
+            m.recipients = List.of("user@unknown.xyz","general@kenobi.chad");
+            m.subject = "test";
+            m.message = "message";
             this.message = m;
         }
 

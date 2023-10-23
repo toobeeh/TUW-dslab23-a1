@@ -1,13 +1,11 @@
 package dslab.util.tcp.dmtp;
 
 import dslab.data.Packet;
-import dslab.util.dns.DNS;
-import dslab.util.dns.DomainNameNotFoundException;
+import dslab.util.Message;
 import dslab.util.tcp.TCPClient;
 import dslab.util.tcp.TCPPooledServer;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -17,7 +15,7 @@ public class DMTPServer implements Runnable {
     private TCPPooledServer server;
     private ConcurrentLinkedQueue<TCPClient> clients = new ConcurrentLinkedQueue<>();
     private int port;
-    public Consumer<DMTPServerModel.Message> onMessageReceived;
+    public Consumer<Message> onMessageReceived;
 
     public DMTPServer(int port, ExecutorService executor){
         this.port = port;
