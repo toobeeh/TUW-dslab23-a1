@@ -15,11 +15,11 @@ import java.util.function.Consumer;
  */
 public class DMTPServer extends PacketProtocol {
 
-    class Message {
-        String subject;
-        String sender;
-        String message;
-        List<String> recipients;
+    public class Message {
+        public String subject;
+        public String sender;
+        public String message;
+        public List<String> recipients;
     }
     private Message message = null;
     private Message getMessage() throws PacketHandleException {
@@ -57,6 +57,17 @@ public class DMTPServer extends PacketProtocol {
 
     @CommandPacketHandler
     public void handleSend(SendPacket packet) throws PacketHandleException {
+
+        // TODO remove
+        if(this.message == null) {
+            var m = new Message();
+            m.sender = "a";
+            m.recipients = List.of("b");
+            m.subject = "c";
+            m.message = "d";
+            this.message = m;
+        }
+
         var message = this.getMessage();
         if(message.sender == null) throw new PacketHandleException("no sender");
         if(message.subject == null) throw new PacketHandleException("no subject");

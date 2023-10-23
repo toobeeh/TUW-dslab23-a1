@@ -10,8 +10,8 @@ public class OkPacket implements Packet<OkPacket> {
     public String message;
 
     public OkPacket parseString(String data) throws PacketProtocolException {
-        if(!data.equals("ok")) throw new PacketProtocolException();
-        if(data.length() > 3) message = data.substring(4);
+        if(!data.startsWith("ok")) throw new PacketProtocolException();
+        if(data.length() > 3) message = data.substring(3);
         return this;
     }
 
@@ -24,5 +24,4 @@ public class OkPacket implements Packet<OkPacket> {
     public String toPacketString() {
         return "ok" + (message == null ? "" : " " + message);
     }
-
 }

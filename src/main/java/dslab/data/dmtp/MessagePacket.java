@@ -10,9 +10,8 @@ public class MessagePacket implements Packet<MessagePacket> {
 
     public String message;
     public MessagePacket parseString(String data) throws PacketParseException, PacketProtocolException {
-        var tokens = data.split(" ");
-        if(!tokens[0].equals("data")) throw new PacketProtocolException();
-        if(tokens.length < 2) throw new PacketParseException("no message");
+        if(!data.startsWith("data")) throw new PacketProtocolException();
+        if(data.split(" ").length < 2) throw new PacketParseException("no message");
 
         this.message = data.substring(5);
         return this;

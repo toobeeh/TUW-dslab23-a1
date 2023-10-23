@@ -2,15 +2,17 @@ package dslab.transfer;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import dslab.ComponentFactory;
 import dslab.data.Packet;
-import dslab.data.dmtp.ErrorPacket;
 import dslab.data.monitoring.MonitoringPacket;
 import dslab.util.Config;
+import dslab.util.PacketSequence;
 import dslab.util.dns.DNS;
+import dslab.util.dns.DomainNameNotFoundException;
 import dslab.util.tcp.TCPClient;
 import dslab.util.tcp.TCPPooledServer;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
@@ -55,8 +57,8 @@ public class TransferServer implements ITransferServer, Runnable {
     public void run() {
 
         // start the server with threadpool in a new thread
-        new Thread(this.server, "TCP Server Pool").start();
-        System.out.println("TCP Server Pool has started");
+        new Thread(this.server, "TCP DMTP Server Pool").start();
+        System.out.println("TCP DMTP Server Pool has started on :" + port);
     }
 
     @Override
@@ -79,16 +81,25 @@ public class TransferServer implements ITransferServer, Runnable {
         // send message
         protocol.onMessageSent = message -> {
             reportMessageToMonitoring(message);
+
+            InetSocketAddress address;
+            try {
+                address = dns.getDomainNameAddress("earth.planet");
+            } catch (DomainNameNotFoundException e) {
+                throw new RuntimeException(e); // TODO send error message
+            }
+            sendMessageToMailbox(address.getHostName(), address.getPort(), message);
         };
 
         // init socket event handlers
-        client.onSocketReady = () -> {
-            System.out.println("DMTP Client connected");
+        client.getOnSocketReady().thenAccept(readyClient -> {
             client.send("ok DMTP");
-        };
+        });
 
         // init shutdown event
-        client.onSocketShutdown = () -> System.out.println("Client disconnected");
+        client.getOnSocketShutdown().thenAccept(shutdownClient -> {
+            clients.remove(shutdownClient); // this is called in the socket thread -> clients list needs to be thread-safe
+        });
 
         // init command event
         client.onDataReceived = (data) -> {
@@ -105,12 +116,9 @@ public class TransferServer implements ITransferServer, Runnable {
                 client.send(result);
                 client.shutdown();
             }
-
-            // log command & response
-            System.out.println(String.format("%1$30s", data) + " >> " + result.toPacketString());
         };
 
-        client.run();
+        clients.add(client);
         return client;
     }
 
@@ -120,6 +128,40 @@ public class TransferServer implements ITransferServer, Runnable {
         monitoring.host = "test";
         monitoring.email = message.sender;
         this.monitoringClient.send(monitoring.toPacketString());
+    }
+
+    private void sendMessageToMailbox(String mailboxHost, int mailboxPort, DMTPServer.Message message) {
+        var clientHandle = this.server.createNewTCPSocket(mailboxHost, mailboxPort);
+        var client = clientHandle.getClient();
+        var protocol = new DMTPClient();
+        var sequence = PacketSequence.fromMessage(message);
+
+        client.onDataReceived = data -> {
+            try {
+                // if not validated, wait until server sent begin
+                if(!protocol.isValidated()) {
+                    var response = protocol.handle(data); // if this passes, server sent the protocol confirmation
+                    client.send(sequence.next());
+                }
+                else {
+                    // let sequence handle next packet
+                    var result = sequence.checkResponse(data, protocol);
+
+                    if(sequence.hasFinished()){
+                        client.shutdown();
+                        System.out.println(result);
+                    }
+                    else {
+                        client.send(sequence.next());
+                    }
+                }
+            } catch (ProtocolCloseException e) {
+                client.shutdown();
+                //throw new RuntimeException(e);
+            }
+        };
+
+        clientHandle.start();
     }
 
     public static void main(String[] args) throws Exception {

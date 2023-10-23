@@ -13,8 +13,17 @@ public class TCPClient implements Runnable {
     private BufferedReader input;
     private PrintWriter output;
     public Consumer<String> onDataReceived = null;
-    public Runnable onSocketShutdown = null;
-    public Runnable onSocketReady = null;
+
+    public CompletableFuture<TCPClient> getOnSocketShutdown() {
+        return onSocketShutdown;
+    }
+
+    public CompletableFuture<TCPClient> getOnSocketReady() {
+        return onSocketReady;
+    }
+
+    private CompletableFuture<TCPClient> onSocketShutdown = new CompletableFuture<>();
+    private CompletableFuture<TCPClient> onSocketReady = new CompletableFuture<>();
     private boolean stopped = false;
 
     public TCPClient(Socket clientSocket) {
@@ -32,12 +41,14 @@ public class TCPClient implements Runnable {
             throw new RuntimeException(e);
         }
 
-        if(onSocketReady != null) onSocketReady.run();
+        if(onSocketReady != null) onSocketReady.complete(this);
 
         while(!this.stopped){
             try {
                 var line = input.readLine();
-                if(onDataReceived != null) onDataReceived.accept(line);
+                System.out.println(">>> " + line);
+                if(line == null) this.shutdown();
+                else if(onDataReceived != null) onDataReceived.accept(line);
             } catch (IOException e) {
                 this.shutdown();
             }
@@ -45,15 +56,19 @@ public class TCPClient implements Runnable {
     }
 
     public void send(String data) {
+        System.out.println("<<< " + data);
         this.output.println(data);
     }
 
     public void send(Packet packet) {
-        this.output.println(packet.toPacketString());
+        this.send(packet.toPacketString());
     }
 
-    public void shutdown(){
+    public synchronized void shutdown(){
+        System.out.println("closing");
+        if(stopped) return;
         this.stopped = true;
+
         try {
             this.input.close();
             this.output.close();
@@ -66,6 +81,6 @@ public class TCPClient implements Runnable {
         } catch (IOException e) {
             System.err.println(e);
         }
-        if(onSocketShutdown != null) onSocketShutdown.run();
+        if(onSocketShutdown != null) onSocketShutdown.complete(this);
     }
 }
