@@ -17,7 +17,7 @@ public class DMTPServerModel extends PacketProtocol {
 
     private Message message = null;
     private Message getMessage() throws PacketHandleException {
-        if(this.message == null) throw new PacketHandleException("has not begun");
+        if(this.message == null) throw new PacketHandleException("");
         return message;
     }
 
@@ -25,7 +25,7 @@ public class DMTPServerModel extends PacketProtocol {
 
     @CommandPacketHandler
     public void handleBegin(BeginPacket packet) throws PacketHandleException {
-        if(message != null) throw new PacketHandleException("has already begun");
+        if(message != null) throw new PacketHandleException("");
         message = new Message();
     }
 
