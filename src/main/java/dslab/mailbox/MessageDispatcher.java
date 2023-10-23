@@ -17,9 +17,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class MessageDispatcher implements Runnable {
@@ -29,6 +27,8 @@ public class MessageDispatcher implements Runnable {
     private ExecutorService executor;
     private DatagramChannel monitoringChannel;
     private DNS dns = new DNS();
+
+    private BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>();
 
     public MessageDispatcher(String idHost, int idPort, String monitoringHost, int monitoringPort, ExecutorService executor){
         this.idHost = idHost;
@@ -44,11 +44,15 @@ public class MessageDispatcher implements Runnable {
         }
     }
 
+    public void queueMessage(Message message){
+        this.messageQueue.add(message);
+    }
+
     /**
-     * Senda a message to the recipient's mailboxes and to the monitoring server for logging
+     * Sends a message to the recipient's mailboxes and to the monitoring server for logging
      * @param message an incoming message
      */
-    public void handleMessage(Message message) {
+    private void handleMessage(Message message) {
         reportMessageToMonitoring(message);
 
         var results = new ArrayList<CompletableFuture<String>>();
@@ -72,6 +76,14 @@ public class MessageDispatcher implements Runnable {
                 result.complete("error unknown domain " + domain.getKey() + " of " + users);
                 results.add(result);
             }
+            catch (IOException e) {
+
+                // server domain is not available
+                var result = new CompletableFuture<String>();
+                var users = String.join(", ", domain.getValue());
+                result.complete("error unavailable server " + domain.getKey() + " of " + users);
+
+            }
         }
 
         // wait for results of all domain and if mailbox transfers failed, send the user a notification
@@ -86,7 +98,7 @@ public class MessageDispatcher implements Runnable {
                 errorReport.message = errorMessage + "\n> To: " + String.join(", ", message.recipients) + "\n> Subject: " + message.subject + "\n> " + message.message.replace("\n", "\n> ");
                 try {
                     sendMessageToMailbox(errorReport, message.sender.split("@")[1]);
-                } catch (DomainNameNotFoundException e) {
+                } catch (Exception e) {
                     // further errors are ignored
                 }
             }
@@ -115,7 +127,7 @@ public class MessageDispatcher implements Runnable {
      * the socket will run in a thread taken from the thread pool
      * @param message the message to transmit to the mailbox; contains only users of the target domain
      */
-    private CompletableFuture<String> sendMessageToMailbox(Message message, String domain) throws DomainNameNotFoundException {
+    private CompletableFuture<String> sendMessageToMailbox(Message message, String domain) throws DomainNameNotFoundException, IOException {
         InetSocketAddress mailboxAddress = null;
         mailboxAddress = dns.getDomainNameAddress(domain);
         var clientHandle = connectToTcpSocket(mailboxAddress.getHostName(), mailboxAddress.getPort());
@@ -167,14 +179,8 @@ public class MessageDispatcher implements Runnable {
      * @return the client handle, containing the instance and a
      * callable to start the client in the thread pool
      */
-    private TCPClientHandle connectToTcpSocket(String host, int port){
-        Socket socket = null;
-        try {
-            socket = new Socket(host, port);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+    private TCPClientHandle connectToTcpSocket(String host, int port) throws IOException {
+        Socket socket = new Socket(host, port);
         var client = new TCPClient(socket);
         var handle = new TCPClientHandle(() -> executor.execute(client), client);
         return handle;
@@ -182,6 +188,13 @@ public class MessageDispatcher implements Runnable {
 
     @Override
     public void run() {
-
+        while(true){
+            try {
+                Message message = messageQueue.take();
+                handleMessage(message);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
     }
 }

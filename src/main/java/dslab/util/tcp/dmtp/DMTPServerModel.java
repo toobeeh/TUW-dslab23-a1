@@ -55,10 +55,10 @@ public class DMTPServerModel extends PacketProtocol {
         // TODO remove
         if(this.message == null) {
             var m = new Message();
-            m.sender = "tobi@earth.planet";
-            m.recipients = List.of("user@unknown.xyz","general@kenobi.chad");
-            m.subject = "test";
-            m.message = "hello there!\n- general kenobi! you are a bold one.";
+            m.sender = "arthur@earth.planet";
+            m.recipients = List.of("zaphod@univer.ze");
+            m.subject = "testsubject";
+            m.message = "testdata";
             this.message = m;
         }
 
