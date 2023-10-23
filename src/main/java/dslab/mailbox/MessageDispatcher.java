@@ -78,12 +78,12 @@ public class MessageDispatcher {
         CompletableFuture.allOf(results.toArray(new CompletableFuture[0])).thenRun(() -> {
             List<String> errors = results.stream().map(result -> result.join()).filter(error -> error != null).collect(Collectors.toList());
             if(errors.size() > 0){
-                String errorMessage = String.join(",", errors);
+                String errorMessage = String.join("\n", errors);
                 Message errorReport = new Message();
                 errorReport.recipients = List.of(message.sender);
                 errorReport.subject = "Failed to deliver message";
                 errorReport.sender = "mail@" + idHost;
-                errorReport.message = errorMessage;
+                errorReport.message = errorMessage + "\n> To: " + String.join(", ", message.recipients) + "\n> Subject: " + message.subject + "\n> " + message.message.replace("\n", "\n> ");
                 try {
                     sendMessageToMailbox(errorReport, message.sender.split("@")[1]);
                 } catch (DomainNameNotFoundException e) {

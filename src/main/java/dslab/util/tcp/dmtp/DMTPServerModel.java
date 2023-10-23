@@ -58,7 +58,7 @@ public class DMTPServerModel extends PacketProtocol {
             m.sender = "tobi@earth.planet";
             m.recipients = List.of("user@unknown.xyz","general@kenobi.chad");
             m.subject = "test";
-            m.message = "message";
+            m.message = "hello there!\n- general kenobi! you are a bold one.";
             this.message = m;
         }
 

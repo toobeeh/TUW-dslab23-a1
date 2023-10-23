@@ -13,13 +13,13 @@ public class MessagePacket implements Packet<MessagePacket> {
         if(!data.startsWith("data")) throw new PacketProtocolException();
         if(data.split(" ").length < 2) throw new PacketParseException("no message");
 
-        this.message = data.substring(5);
+        this.message = data.substring(5).replace("<br>", "\n");
         return this;
     }
 
     @Override
     public String toPacketString() {
-        return "data " + this.message;
+        return "data " + this.message.replace("\n", "<br>");
     }
 
 }
