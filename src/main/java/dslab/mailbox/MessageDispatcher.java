@@ -10,7 +10,6 @@ import dslab.util.tcp.TCPClientHandle;
 import dslab.util.tcp.dmtp.DMTPClientModel;
 import dslab.util.tcp.dmtp.DMTPServerModel;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
-import dslab.util.udp.UDPSender;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -41,11 +40,19 @@ public class MessageDispatcher {
         }
     }
 
+    /**
+     * Senda a message to the recipient's mailboxes and to the monitoring server for logging
+     * @param message an incoming message
+     */
     public void handleMessage(DMTPServerModel.Message message) {
         reportMessageToMonitoring(message);
         sendMessageToMailbox(message);
     }
 
+    /**
+     * sends an udp packet to the monitoring to collect stats about traffic
+     * @param message the message which will be logged
+     */
     private void reportMessageToMonitoring(DMTPServerModel.Message message) {
         MonitoringPacket monitoring = new MonitoringPacket();
         monitoring.port = idPort;
@@ -58,6 +65,12 @@ public class MessageDispatcher {
         }
     }
 
+    /**
+     * opens a new connection to a mailbox server and transfers the message via dmtp to it;
+     * mailbox server is parsed from the recipients and resolved through dns
+     * the socket will run in a thread taken from the thread pool
+     * @param message the message to transmit to the mailbox
+     */
     private void sendMessageToMailbox(DMTPServerModel.Message message) {
         InetSocketAddress mailboxAddress = null;
         try {
@@ -67,21 +80,23 @@ public class MessageDispatcher {
         }
         var clientHandle = connectToTcpSocket(mailboxAddress.getHostName(), mailboxAddress.getPort());
 
+        // set up receiver protocol (to validate server responses) and message sequence to be sent
         var client = clientHandle.getClient();
         var protocol = new DMTPClientModel();
         var sequence = PacketSequence.fromMessage(message);
 
         client.onDataReceived = data -> {
             try {
-                // if protocol not validated, wait until server sent begin
+                // first message should validate protocol or throw error
                 if(!protocol.isValidated()) {
-                    var response = protocol.handle(data); // if this passes, server sent the protocol confirmation
+                    protocol.handle(data); // if this passes, server sent the protocol confirmation
                     client.send(sequence.next());
                 }
                 else {
-                    // let sequence handle next packet
+                    // let sequence check returned data with expected data
                     var result = sequence.checkResponse(data, protocol);
 
+                    // check if sequence has finished, and check if sequence result is truthy
                     if(sequence.hasFinished()){
                         client.shutdown();
 
@@ -89,6 +104,8 @@ public class MessageDispatcher {
                             throw new RuntimeException("could not be delivered blah"); // TODO call reporting function
                         }
                     }
+
+                    // go ahead with next packet in sequence
                     else {
                         client.send(sequence.next());
                     }
@@ -99,6 +116,7 @@ public class MessageDispatcher {
             }
         };
 
+        // start client after callbacks have initialized
         clientHandle.start();
     }
 
