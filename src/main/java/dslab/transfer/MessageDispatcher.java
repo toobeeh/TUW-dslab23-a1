@@ -1,4 +1,4 @@
-package dslab.mailbox;
+package dslab.transfer;
 
 import dslab.data.monitoring.MonitoringPacket;
 import dslab.util.Message;
@@ -36,16 +36,16 @@ public class MessageDispatcher implements Runnable {
         this.executor = executor;
 
         try {
-            this.monitoringChannel = DatagramChannel.open();
-            this.monitoringChannel.connect(new InetSocketAddress(monitoringHost, monitoringPort));
-            this.monitoringChannel.configureBlocking(false);
+            monitoringChannel = DatagramChannel.open();
+            monitoringChannel.connect(new InetSocketAddress(monitoringHost, monitoringPort));
+            monitoringChannel.configureBlocking(false);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public void queueMessage(Message message){
-        this.messageQueue.add(message);
+        messageQueue.add(message);
     }
 
     /**

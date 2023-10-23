@@ -11,7 +11,6 @@ import java.util.List;
 public class PacketSequence {
 
     List<Packet> packets;
-
     private Packet currentPacket;
     private Packet currentResult;
 

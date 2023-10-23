@@ -63,8 +63,8 @@ public abstract class PacketProtocol {
                 String identification = packetIdentification.value();
 
                 // register handler and factory
-                this.packetFactories.put(identification, getPacketFactory(packetType));
-                this.packetHandlers.put(identification, getPacketHandler(method));
+                packetFactories.put(identification, getPacketFactory(packetType));
+                packetHandlers.put(identification, getPacketHandler(method));
             }
         }
     }
@@ -77,7 +77,7 @@ public abstract class PacketProtocol {
     public Packet handle(String data) throws ProtocolCloseException {
         Packet packet = null;
         try {
-            packet = this.createPacketFromString(data);
+            packet = createPacketFromString(data);
         } catch (PacketProtocolException e) {
 
             // handle invalid packets
@@ -93,7 +93,7 @@ public abstract class PacketProtocol {
 
         // the handler should have the right signature as it is checked in the constructor
         // if no handler, its a protocol error
-        var handler = this.packetHandlers.get(identification);
+        var handler = packetHandlers.get(identification);
         if(handler == null) {
             var error = new ErrorPacket().withMessage("protocol error");
             if(protocolErrorIsFatal()) throw new ProtocolCloseException(error);
@@ -122,7 +122,7 @@ public abstract class PacketProtocol {
      */
     private Packet createPacketFromString(String data) throws PacketProtocolException, PacketParseException {
         String identification = data.split(" ")[0];
-        var factory = this.packetFactories.get(identification);
+        var factory = packetFactories.get(identification);
         if(factory == null) {
             throw new PacketProtocolException();
         }

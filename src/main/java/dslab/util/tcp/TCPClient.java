@@ -12,19 +12,16 @@ public class TCPClient implements Runnable {
     private Socket clientSocket;
     private BufferedReader input;
     private PrintWriter output;
-    public Consumer<String> onDataReceived = null;
-
-    public CompletableFuture<TCPClient> getOnSocketShutdown() {
-        return onSocketShutdown;
-    }
-
-    public CompletableFuture<TCPClient> getOnSocketReady() {
-        return onSocketReady;
-    }
-
     private CompletableFuture<TCPClient> onSocketShutdown = new CompletableFuture<>();
     private CompletableFuture<TCPClient> onSocketReady = new CompletableFuture<>();
     private boolean stopped = false;
+    public Consumer<String> onDataReceived = null;
+    public CompletableFuture<TCPClient> getOnSocketShutdown() {
+        return onSocketShutdown;
+    }
+    public CompletableFuture<TCPClient> getOnSocketReady() {
+        return onSocketReady;
+    }
 
     public TCPClient(Socket clientSocket) {
         this.clientSocket = clientSocket;
@@ -32,27 +29,27 @@ public class TCPClient implements Runnable {
 
     @Override
     public void run() {
-        this.input = null;
-        this.output = null;
+        input = null;
+        output = null;
         try {
-            this.output = new PrintWriter(clientSocket.getOutputStream(), true);
-            this.input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            output = new PrintWriter(clientSocket.getOutputStream(), true);
+            input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
         if(onSocketReady != null) onSocketReady.complete(this);
 
-        while(!this.stopped){
+        while(!stopped){
             try {
                 var line = input.readLine();
-                if(line == null) this.shutdown();
+                if(line == null) shutdown();
                 else if(onDataReceived != null) {
                     //System.out.println(clientSocket.getInetAddress().toString() + " >>> " + line);
                     onDataReceived.accept(line);
                 }
             } catch (IOException e) {
-                this.shutdown();
+                shutdown();
             }
         }
 
@@ -61,7 +58,7 @@ public class TCPClient implements Runnable {
 
     public void send(String data) {
         //System.out.println(clientSocket.getInetAddress().toString() + " <<< " + data);
-        this.output.println(data);
+        output.println(data);
     }
 
     public void send(Packet packet) {
@@ -70,7 +67,7 @@ public class TCPClient implements Runnable {
 
     public synchronized void shutdown(){
         if(stopped) return;
-        this.stopped = true;
+        stopped = true;
 
         try {
             if(!clientSocket.isClosed()) clientSocket.close();

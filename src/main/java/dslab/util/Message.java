@@ -45,10 +45,10 @@ public class Message implements Cloneable {
     @Override
     public Message clone() {
         Message m = new Message();
-        m.message = this.message;
-        m.subject = this.subject;
-        m.sender = this.sender;
-        m.recipients = List.copyOf(this.recipients);
+        m.message = message;
+        m.subject = subject;
+        m.sender = sender;
+        m.recipients = List.copyOf(recipients);
         return m;
     }
 }

@@ -17,7 +17,7 @@ public class DMTPServerModel extends PacketProtocol {
 
     private Message message = null;
     private Message getMessage() throws PacketHandleException {
-        if(this.message == null) throw new PacketHandleException("");
+        if(message == null) throw new PacketHandleException("");
         return message;
     }
 
@@ -31,22 +31,22 @@ public class DMTPServerModel extends PacketProtocol {
 
     @CommandPacketHandler
     public void handleData(MessagePacket packet) throws PacketHandleException {
-        this.getMessage().message = packet.message;
+        getMessage().message = packet.message;
     }
 
     @CommandPacketHandler
     public void handleSender(SenderPacket packet) throws PacketHandleException {
-        this.getMessage().sender = packet.sender;
+        getMessage().sender = packet.sender;
     }
 
     @CommandPacketHandler
     public void handleRecipients(ReceiverPacket packet) throws PacketHandleException {
-        this.getMessage().recipients = packet.recipients;
+        getMessage().recipients = packet.recipients;
     }
 
     @CommandPacketHandler
     public void handleSubject(SubjectPacket packet) throws PacketHandleException {
-        this.getMessage().subject = packet.subject;
+        getMessage().subject = packet.subject;
     }
 
     @CommandPacketHandler
@@ -62,7 +62,7 @@ public class DMTPServerModel extends PacketProtocol {
             this.message = m;
         }
 
-        var message = this.getMessage();
+        var message = getMessage();
         if(message.sender == null) throw new PacketHandleException("no sender");
         if(message.subject == null) throw new PacketHandleException("no subject");
         if(message.message == null) throw new PacketHandleException("no data");

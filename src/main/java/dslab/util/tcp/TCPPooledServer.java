@@ -26,7 +26,7 @@ public class TCPPooledServer implements Runnable {
     public void run() {
         this.thread = Thread.currentThread();
         try {
-            this.serverSocket = new ServerSocket(this.port);
+            serverSocket = new ServerSocket(port);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -35,27 +35,25 @@ public class TCPPooledServer implements Runnable {
             try {
                 clientSocket = this.serverSocket.accept();
             } catch (IOException e) {
-                if(this.thread.isInterrupted()) {
-                    break;
-                }
                 System.err.println(e);
+                break;
             }
-            this.threadPool.execute(this.workerFactory.createWorker(clientSocket));
+            threadPool.execute(workerFactory.createWorker(clientSocket));
         }
     }
 
     public void shutdown() {
-        if(!this.serverSocket.isClosed()) {
+        if(!serverSocket.isClosed()) {
             try {
                 this.serverSocket.close();
             } catch (IOException e) {
                 System.err.println(e);
             }
         }
-        if (this.thread != null) {
-            this.thread.interrupt();
+        if (thread != null) {
+            thread.interrupt();
             try {
-                this.thread.join();
+                thread.join();
             } catch (InterruptedException e) {
                 System.err.println(e);
             }

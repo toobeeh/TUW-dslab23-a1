@@ -4,22 +4,13 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import at.ac.tuwien.dsg.orvell.Shell;
 import at.ac.tuwien.dsg.orvell.StopShellException;
 import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
-import dslab.data.monitoring.MonitoringPacket;
-import dslab.mailbox.MessageDispatcher;
 import dslab.util.Config;
-import dslab.util.PacketSequence;
-import dslab.util.dns.DNS;
-import dslab.util.tcp.dmtp.DMTPClientModel;
 import dslab.util.tcp.dmtp.DMTPServer;
-import dslab.util.tcp.dmtp.DMTPServerModel;
-import dslab.util.tcp.exceptions.ProtocolCloseException;
-import dslab.util.udp.UDPSender;
 
 public class TransferServer implements ITransferServer, Runnable {
 
@@ -44,28 +35,28 @@ public class TransferServer implements ITransferServer, Runnable {
 
         messageDispatcher = new MessageDispatcher("transfer.one", port, monitoringHost, monitoringPort, threadPool);
         dispatcherThread = new Thread(messageDispatcher, "Message Dispatcher");
-        dispatcherThread.start();
         dmtpServer = new DMTPServer(port, threadPool);
 
         dmtpServer.onMessageReceived = message -> messageDispatcher.queueMessage(message);
 
-        this.shell = new Shell(in, out);
-        this.shell.setPrompt(componentId + "> ");
-        this.shell.register(this);
+        shell = new Shell(in, out);
+        shell.setPrompt(componentId + "> ");
+        shell.register(this);
     }
 
     @Override
     public void run() {
-        this.dmtpServer.run();
-        this.shell.run();
+        dispatcherThread.start();
+        dmtpServer.run();
+        shell.run();
     }
 
     @Override
     @Command
     public void shutdown() {
-        this.dispatcherThread.stop();
-        this.dmtpServer.shutdown();
-        this.threadPool.shutdown();
+        dispatcherThread.stop();
+        dmtpServer.shutdown();
+        threadPool.shutdown();
         throw new StopShellException();
     }
 

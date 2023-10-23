@@ -31,9 +31,9 @@ public class UDPReceiver implements Runnable {
     @Override
     public void run() {
 
-        byte[] receivedData = new byte[this.packetSize];
+        byte[] receivedData = new byte[packetSize];
 
-        while(!this.thread.isInterrupted()) {
+        while(!thread.isInterrupted()) {
 
             // try to receive packet
             DatagramPacket packet = new DatagramPacket(receivedData, receivedData.length);
@@ -50,7 +50,7 @@ public class UDPReceiver implements Runnable {
             InetAddress senderAddress = packet.getAddress();
 
             try{
-                this.callback.onPacketReceivedCallback(data, senderAddress);
+                callback.onPacketReceivedCallback(data, senderAddress);
             }
             catch (Exception e) {
                 System.err.println("Error in Callback: \n" + e.toString());

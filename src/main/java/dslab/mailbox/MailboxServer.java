@@ -39,13 +39,13 @@ public class MailboxServer implements IMailboxServer, Runnable {
 
     @Override
     public void run() {
-        this.dmtpServer.run();
+        dmtpServer.run();
     }
 
     @Override
     public void shutdown() {
-        this.dmtpServer.shutdown();
-        this.threadPool.shutdown();
+        dmtpServer.shutdown();
+        threadPool.shutdown();
     }
 
     public static void main(String[] args) throws Exception {
