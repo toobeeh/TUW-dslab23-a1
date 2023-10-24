@@ -45,7 +45,7 @@ public class TCPClient implements Runnable {
                 var line = input.readLine();
                 if(line == null) shutdown();
                 else if(onDataReceived != null) {
-                    //System.out.println(clientSocket.getInetAddress().toString() + " >>> " + line);
+                    System.out.println(clientSocket.getInetAddress().toString() + " >>> " + line);
                     onDataReceived.accept(line);
                 }
             } catch (IOException e) {
@@ -57,7 +57,7 @@ public class TCPClient implements Runnable {
     }
 
     public void send(String data) {
-        //System.out.println(clientSocket.getInetAddress().toString() + " <<< " + data);
+        System.out.println(clientSocket.getInetAddress().toString() + " <<< " + data);
         output.println(data);
     }
 

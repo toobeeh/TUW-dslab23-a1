@@ -9,6 +9,7 @@ import dslab.util.tcp.exceptions.ProtocolCloseException;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 /**
  * A class that models the flow of a DMTP connection
@@ -21,7 +22,27 @@ public class DMTPServerModel extends PacketProtocol {
         return message;
     }
 
-    public Consumer<Message> onMessageSent;
+    private Consumer<Message> onMessageSent;
+
+    private UnaryOperator<List<String>> validateRecipients;
+
+    /**
+     * Sets the callback that is executed as soon as a client submitted a message
+     * @param callback a consumer that takes the newly created message as argument
+     */
+    public void setOnMessageSent(Consumer<Message> callback){
+        this.onMessageSent = callback;
+    }
+
+    /**
+     * Sets the function that validates recioients of a message
+     * @param validator the validator function that accespts the list of
+     *                  recipients and returns those that are invalid.
+     *                  null or an empty list mean that all recipients were valid.
+     */
+    public void setRecipientValidator(UnaryOperator<List<String>> validator){
+        this.validateRecipients = validator;
+    }
 
     @CommandPacketHandler
     public void handleBegin(BeginPacket packet) throws PacketHandleException {
@@ -41,6 +62,14 @@ public class DMTPServerModel extends PacketProtocol {
 
     @CommandPacketHandler
     public void handleRecipients(ReceiverPacket packet) throws PacketHandleException {
+        if(validateRecipients != null) {
+            var invalid = validateRecipients.apply(packet.recipients);
+            if(invalid != null && invalid.size() > 0){
+                var error = "unknown user" + (invalid.size() > 1 ? "s" : "") + " "
+                        + String.join(",", invalid);
+                throw new PacketHandleException(error);
+            }
+        }
         getMessage().recipients = packet.recipients;
     }
 
@@ -55,8 +84,8 @@ public class DMTPServerModel extends PacketProtocol {
         // TODO remove
         if(this.message == null) {
             var m = new Message();
-            m.sender = "arthur@earth.planet";
-            m.recipients = List.of("zaphod@univer.ze");
+            m.sender = "test@earth.planet";
+            m.recipients = List.of("zaphod@earth.planet");
             m.subject = "testsubject";
             m.message = "testdata";
             this.message = m;

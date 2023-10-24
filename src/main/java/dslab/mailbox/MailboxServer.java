@@ -32,9 +32,12 @@ public class MailboxServer implements IMailboxServer, Runnable {
         var dmtpPort = config.getInt("dmtp.tcp.port");
 
         dmtpServer = new DMTPServer(dmtpPort, threadPool);
-        dmtpServer.onMessageReceived = message -> {
+        dmtpServer.setOnMessageReceived(message -> {
             System.out.println(message.sender + " -> " + String.join(",", message.recipients) + "\n" + message.subject + ":\n" + message.message + "\n---- \n");
-        };
+        });
+        dmtpServer.setRecipientValidator(recipients -> {
+            return recipients.get(0).equals("test@earth.planet") ? null : recipients;
+        });
     }
 
     @Override

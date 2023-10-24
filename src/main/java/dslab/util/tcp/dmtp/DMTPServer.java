@@ -7,15 +7,26 @@ import dslab.util.tcp.TCPPooledServer;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
 import java.net.Socket;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 public class DMTPServer implements Runnable {
     private TCPPooledServer server;
     private ConcurrentLinkedQueue<TCPClient> clients = new ConcurrentLinkedQueue<>();
     private int port;
-    public Consumer<Message> onMessageReceived;
+    private Consumer<Message> onMessageReceived;
+    private UnaryOperator<List<String>> validateRecipients;
+
+    public void setOnMessageReceived(Consumer<Message> onMessageReceived) {
+        this.onMessageReceived = onMessageReceived;
+    }
+
+    public void setRecipientValidator(UnaryOperator<List<String>> validateRecipients) {
+        this.validateRecipients = validateRecipients;
+    }
 
     public DMTPServer(int port, ExecutorService executor){
         this.port = port;
@@ -48,9 +59,10 @@ public class DMTPServer implements Runnable {
         var protocol = new DMTPServerModel();
 
         // send message
-        protocol.onMessageSent = message -> {
+        protocol.setOnMessageSent(message -> {
             if(onMessageReceived != null) onMessageReceived.accept(message);
-        };
+        });
+        protocol.setRecipientValidator(this.validateRecipients);
 
         // init socket event handlers
         client.getOnSocketReady().thenAccept(readyClient -> {

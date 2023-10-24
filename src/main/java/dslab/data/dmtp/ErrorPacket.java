@@ -9,9 +9,8 @@ import dslab.data.exceptions.PacketProtocolException;
 public class ErrorPacket implements Packet<ErrorPacket> {
     public String message;
     public ErrorPacket parseString(String data) throws PacketProtocolException, PacketParseException {
-        if(!data.equals("error")) throw new PacketProtocolException();
-        if(data.length() <= 6 ) throw new PacketParseException("no message");
-        message = data.substring(7);
+        if(!data.startsWith("error")) throw new PacketProtocolException();
+        message = data.length() > 6 ? data.substring(6) : null;
         return this;
     }
 

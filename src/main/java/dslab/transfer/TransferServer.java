@@ -37,7 +37,7 @@ public class TransferServer implements ITransferServer, Runnable {
         dispatcherThread = new Thread(messageDispatcher, "Message Dispatcher");
         dmtpServer = new DMTPServer(port, threadPool);
 
-        dmtpServer.onMessageReceived = message -> messageDispatcher.queueMessage(message);
+        dmtpServer.setOnMessageReceived(message -> messageDispatcher.queueMessage(message));
 
         shell = new Shell(in, out);
         shell.setPrompt(componentId + "> ");

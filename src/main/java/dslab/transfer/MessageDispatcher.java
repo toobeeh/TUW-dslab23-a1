@@ -63,7 +63,7 @@ public class MessageDispatcher implements Runnable {
 
             // build message only with recipients for domain
             var concreteMessage = message.clone();
-            concreteMessage.recipients = domain.getValue().stream().map(user -> user + "@" + domain).collect(Collectors.toList());
+            concreteMessage.recipients = domain.getValue().stream().map(user -> user + "@" + domain.getKey()).collect(Collectors.toList());
 
             // try to send message
             try {

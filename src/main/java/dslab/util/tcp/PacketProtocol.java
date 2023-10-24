@@ -205,7 +205,7 @@ public abstract class PacketProtocol {
                     throw (PacketHandleException) e.getTargetException();
                 }
 
-                // check if handler termianted connection
+                // check if handler terminated connection
                 if(e.getTargetException() instanceof ProtocolCloseException) {
                     throw (ProtocolCloseException) e.getTargetException();
                 }
