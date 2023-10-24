@@ -1,8 +1,6 @@
-package dslab.data.dmtp;
+package dslab.data;
 
-import dslab.data.Packet;
 import dslab.data.annotations.CommandPacket;
-import dslab.data.exceptions.PacketParseException;
 import dslab.data.exceptions.PacketProtocolException;
 
 @CommandPacket("ok")

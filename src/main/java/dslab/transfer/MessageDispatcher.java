@@ -62,12 +62,12 @@ public class MessageDispatcher implements Runnable {
         for(var domain : domains.entrySet()) {
 
             // build message only with recipients for domain
-            var concreteMessage = message.clone();
-            concreteMessage.recipients = domain.getValue().stream().map(user -> user + "@" + domain.getKey()).collect(Collectors.toList());
+            //var concreteMessage = message.clone();
+            //concreteMessage.recipients = domain.getValue().stream().map(user -> user + "@" + domain.getKey()).collect(Collectors.toList());
 
             // try to send message
             try {
-                results.add(sendMessageToMailbox(concreteMessage, domain.getKey()));
+                results.add(sendMessageToMailbox(message, domain.getKey()));
             } catch (DomainNameNotFoundException e) {
 
                 // unknown domain; result is all users are unknown

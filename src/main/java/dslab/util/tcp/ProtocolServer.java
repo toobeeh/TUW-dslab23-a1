@@ -1,44 +1,37 @@
-package dslab.util.tcp.dmtp;
+package dslab.util.tcp;
 
 import dslab.data.Packet;
-import dslab.util.Message;
-import dslab.util.tcp.TCPClient;
-import dslab.util.tcp.TCPPooledServer;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
 import java.net.Socket;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
-import java.util.function.UnaryOperator;
+import java.util.function.Supplier;
 
-public class DMTPServer implements Runnable {
+public class ProtocolServer implements Runnable {
     private TCPPooledServer server;
     private ConcurrentLinkedQueue<TCPClient> clients = new ConcurrentLinkedQueue<>();
     private int port;
-    private Consumer<Message> onMessageReceived;
-    private UnaryOperator<List<String>> validateRecipients;
+    private Supplier<PacketProtocol> protocolSupplier;
 
-    public void setOnMessageReceived(Consumer<Message> onMessageReceived) {
-        this.onMessageReceived = onMessageReceived;
-    }
-
-    public void setRecipientValidator(UnaryOperator<List<String>> validateRecipients) {
-        this.validateRecipients = validateRecipients;
-    }
-
-    public DMTPServer(int port, ExecutorService executor){
+    public ProtocolServer(int port, ExecutorService executor, Supplier<PacketProtocol> packetProtocolSupplier){
         this.port = port;
         this.server = new TCPPooledServer(port, this::createClientWorker, executor);
+        this.protocolSupplier = packetProtocolSupplier;
     }
 
     @Override
     public void run() {
 
+        var name = "";
+        {
+            var p = protocolSupplier.get();
+            name = p.protocolName();
+        }
+
         // start the server with threadpool in a new thread
-        new Thread(this.server, "DMTP Server Pool").start();
-        System.out.println("DMTP Server Pool online on port " + port);
+        new Thread(this.server, name + " Server").start();
+        System.out.println(name + " Server online on port " + port);
     }
 
     public void shutdown() {
@@ -56,17 +49,11 @@ public class DMTPServer implements Runnable {
      */
     private TCPClient createClientWorker(Socket clientSocket){
         var client = new TCPClient(clientSocket);
-        var protocol = new DMTPServerModel();
+        var protocol = protocolSupplier.get();
 
-        // send message
-        protocol.setOnMessageSent(message -> {
-            if(onMessageReceived != null) onMessageReceived.accept(message);
-        });
-        protocol.setRecipientValidator(this.validateRecipients);
-
-        // init socket event handlers
+        // init socket event handlers and greet with protocol name
         client.getOnSocketReady().thenAccept(readyClient -> {
-            client.send("ok DMTP");
+            client.send("ok " + protocol.protocolName());
         });
 
         // init shutdown event
@@ -78,7 +65,7 @@ public class DMTPServer implements Runnable {
         client.onDataReceived = (data) -> {
             Packet result = null;
 
-            // handle incoming DMTP command
+            // handle incoming protocol command
             try {
                 result = protocol.handle(data);
                 client.send(result);

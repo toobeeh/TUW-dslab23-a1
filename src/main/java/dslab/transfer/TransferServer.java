@@ -10,12 +10,14 @@ import at.ac.tuwien.dsg.orvell.StopShellException;
 import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
 import dslab.util.Config;
-import dslab.util.tcp.dmtp.DMTPServer;
+import dslab.util.tcp.DMAPServerModel;
+import dslab.util.tcp.ProtocolServer;
+import dslab.util.tcp.dmtp.DMTPServerModel;
 
 public class TransferServer implements ITransferServer, Runnable {
 
     private Shell shell;
-    private DMTPServer dmtpServer;
+    private ProtocolServer dmtpServer;
     private MessageDispatcher messageDispatcher;
     private Thread dispatcherThread;
     private ExecutorService threadPool = Executors.newCachedThreadPool();
@@ -35,13 +37,17 @@ public class TransferServer implements ITransferServer, Runnable {
 
         messageDispatcher = new MessageDispatcher("transfer.one", port, monitoringHost, monitoringPort, threadPool);
         dispatcherThread = new Thread(messageDispatcher, "Message Dispatcher");
-        dmtpServer = new DMTPServer(port, threadPool);
-
-        dmtpServer.setOnMessageReceived(message -> messageDispatcher.queueMessage(message));
+        dmtpServer = new ProtocolServer(port, threadPool, this::createDmtpModel);
 
         shell = new Shell(in, out);
         shell.setPrompt(componentId + "> ");
         shell.register(this);
+    }
+
+    private DMTPServerModel createDmtpModel(){
+        var dmtp = new DMTPServerModel();
+        dmtp.setOnMessageSent(message -> messageDispatcher.queueMessage(message));
+        return dmtp;
     }
 
     @Override

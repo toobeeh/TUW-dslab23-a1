@@ -3,7 +3,7 @@ package dslab.util.tcp;
 import dslab.data.*;
 import dslab.data.annotations.CommandPacket;
 import dslab.data.annotations.CommandPacketHandler;
-import dslab.data.dmtp.ErrorPacket;
+import dslab.data.ErrorPacket;
 import dslab.data.exceptions.PacketParseException;
 import dslab.data.exceptions.PacketHandleException;
 import dslab.data.exceptions.PacketProtocolException;
@@ -43,6 +43,7 @@ public abstract class PacketProtocol {
     private HashMap<String, PacketHandler> packetHandlers = new HashMap<>();
     private HashMap<String, PacketFactory> packetFactories = new HashMap<>();
     protected abstract boolean protocolErrorIsFatal();
+    public abstract String protocolName();
 
     public PacketProtocol(){
 
@@ -141,7 +142,7 @@ public abstract class PacketProtocol {
             throw new IllegalArgumentException("packet processor must only have exactly one argument of type Packet");
         }
         if(!Packet.class.isAssignableFrom(candidate.getReturnType()) && !candidate.getReturnType().equals(void.class)){
-            throw new IllegalArgumentException("packet processor must only return a string or void");
+            throw new IllegalArgumentException("packet processor must only return a packet or void");
         }
         return (Class<? extends Packet>) paramTypes[0];
     }

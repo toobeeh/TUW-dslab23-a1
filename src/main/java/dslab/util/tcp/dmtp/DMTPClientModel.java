@@ -1,7 +1,8 @@
 package dslab.util.tcp.dmtp;
 
+import dslab.data.ErrorPacket;
+import dslab.data.OkPacket;
 import dslab.data.annotations.CommandPacketHandler;
-import dslab.data.dmtp.*;
 import dslab.util.tcp.PacketProtocol;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
@@ -32,5 +33,10 @@ public class DMTPClientModel extends PacketProtocol {
     @Override
     protected boolean protocolErrorIsFatal() {
         return false;
+    }
+
+    @Override
+    public String protocolName() {
+        return "DMTP";
     }
 }
