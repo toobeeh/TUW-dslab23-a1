@@ -8,8 +8,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TCPPooledServer implements Runnable {
-
-
     private ServerSocket serverSocket = null;
     private WorkerFactory workerFactory;
     private int port;

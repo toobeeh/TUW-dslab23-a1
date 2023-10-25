@@ -35,7 +35,7 @@ public class TransferServer implements ITransferServer, Runnable {
         var monitoringHost = config.getString("monitoring.host");
         var monitoringPort = config.getInt("monitoring.port");
 
-        messageDispatcher = new MessageDispatcher("transfer.one", port, monitoringHost, monitoringPort, threadPool);
+        messageDispatcher = new MessageDispatcher(port, monitoringHost, monitoringPort, threadPool);
         dispatcherThread = new Thread(messageDispatcher, "Message Dispatcher");
         dmtpServer = new ProtocolServer(port, threadPool, this::createDmtpModel);
 

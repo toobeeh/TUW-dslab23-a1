@@ -11,14 +11,19 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import at.ac.tuwien.dsg.orvell.Shell;
+import at.ac.tuwien.dsg.orvell.StopShellException;
+import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
 import dslab.util.Message;
 import dslab.util.tcp.DMAPServerModel;
 import dslab.util.tcp.ProtocolServer;
 import dslab.util.Config;
 import dslab.util.tcp.dmtp.DMTPServerModel;
+import org.hamcrest.internal.ReflectiveTypeFinder;
 
 public class MailboxServer implements IMailboxServer, Runnable {
+    private Shell shell;
     private ProtocolServer dmtpServer, dmapServer;
     private ExecutorService threadPool = Executors.newCachedThreadPool();
     private ConcurrentHashMap<String, ConcurrentHashMap<String, Message>> storedMessages = new ConcurrentHashMap<>();
@@ -49,6 +54,10 @@ public class MailboxServer implements IMailboxServer, Runnable {
         // init servers
         dmtpServer = new ProtocolServer(dmtpPort, threadPool, this::createDmtpModel);
         dmapServer = new ProtocolServer(dmapPort, threadPool, this::createDmapModel);
+
+        shell = new Shell(in, out);
+        shell.setPrompt(componentId + "> ");
+        shell.register(this);
     }
 
     private DMTPServerModel createDmtpModel(){
@@ -116,10 +125,12 @@ public class MailboxServer implements IMailboxServer, Runnable {
     }
 
     @Override
+    @Command
     public void shutdown() {
         dmtpServer.shutdown();
         dmapServer.shutdown();
         threadPool.shutdown();
+        throw new StopShellException();
     }
 
     public static void main(String[] args) throws Exception {

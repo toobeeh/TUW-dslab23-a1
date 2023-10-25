@@ -10,7 +10,9 @@ import dslab.util.tcp.TCPClientHandle;
 import dslab.util.tcp.dmtp.DMTPClientModel;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
+import java.io.Console;
 import java.io.IOException;
+import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
@@ -30,12 +32,12 @@ public class MessageDispatcher implements Runnable {
 
     private BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>();
 
-    public MessageDispatcher(String idHost, int idPort, String monitoringHost, int monitoringPort, ExecutorService executor){
-        this.idHost = idHost;
+    public MessageDispatcher(int idPort, String monitoringHost, int monitoringPort, ExecutorService executor){
         this.idPort = idPort;
         this.executor = executor;
 
         try {
+            idHost = Inet4Address.getLocalHost().getHostAddress();
             monitoringChannel = DatagramChannel.open();
             monitoringChannel.connect(new InetSocketAddress(monitoringHost, monitoringPort));
             monitoringChannel.configureBlocking(false);
@@ -60,10 +62,6 @@ public class MessageDispatcher implements Runnable {
         // split recipients by domains
         var domains = message.getRecipientDomains();
         for(var domain : domains.entrySet()) {
-
-            // build message only with recipients for domain
-            //var concreteMessage = message.clone();
-            //concreteMessage.recipients = domain.getValue().stream().map(user -> user + "@" + domain.getKey()).collect(Collectors.toList());
 
             // try to send message
             try {
