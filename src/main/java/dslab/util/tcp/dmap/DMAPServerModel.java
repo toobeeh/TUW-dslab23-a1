@@ -1,4 +1,4 @@
-package dslab.util.tcp;
+package dslab.util.tcp.dmap;
 
 import dslab.data.AnonymousPacket;
 import dslab.data.ErrorPacket;
@@ -6,6 +6,7 @@ import dslab.data.annotations.CommandPacketHandler;
 import dslab.data.dmap.*;
 import dslab.data.exceptions.PacketHandleException;
 import dslab.util.Message;
+import dslab.util.tcp.PacketProtocol;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
 import java.util.concurrent.ConcurrentHashMap;

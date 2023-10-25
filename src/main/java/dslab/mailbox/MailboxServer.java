@@ -13,7 +13,7 @@ import at.ac.tuwien.dsg.orvell.StopShellException;
 import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
 import dslab.util.Message;
-import dslab.util.tcp.DMAPServerModel;
+import dslab.util.tcp.dmap.DMAPServerModel;
 import dslab.util.tcp.ProtocolServer;
 import dslab.util.Config;
 import dslab.util.tcp.dmtp.DMTPServerModel;
@@ -21,11 +21,9 @@ import dslab.util.tcp.dmtp.DMTPServerModel;
 public class MailboxServer implements IMailboxServer, Runnable {
     private final ProtocolServer dmtpServer;
     private final ProtocolServer dmapServer;
+    private final MailStore mailStore;
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
-    private final ConcurrentHashMap<String, ConcurrentHashMap<String, Message>> storedMessages = new ConcurrentHashMap<>();
-    private final HashMap<String, String> userCredentials; // need not be thread safe since readonly
     private final String serverName;
-    private int nextMessageId = 0;
 
     /**
      * Creates a new server instance.
@@ -40,12 +38,13 @@ public class MailboxServer implements IMailboxServer, Runnable {
         var dmapPort = config.getInt("dmap.tcp.port");
         serverName = config.getString("domain");
 
-        // load users
-        userCredentials = new HashMap<String,String>();
+        // init mail data store
+        var userCredentials = new HashMap<String,String>();
         var userConfig = new Config(config.getString("users.config"));
         for(var user : userConfig.listKeys()){
             userCredentials.put(user, userConfig.getString(user));
         }
+        mailStore = new MailStore(userCredentials);
 
         // init servers
         dmtpServer = new ProtocolServer(dmtpPort, threadPool, this::createDmtpModel);
@@ -58,15 +57,12 @@ public class MailboxServer implements IMailboxServer, Runnable {
 
     private DMTPServerModel createDmtpModel(){
         var dmtp = new DMTPServerModel();
-        dmtp.setOnMessageSent(message -> {
-            System.out.println(message.sender + " -> " + String.join(",", message.recipients) + "\n" + message.subject + ":\n" + message.message + "\n---- \n");
-            storeMessage(message);
-        });
+        dmtp.setOnMessageSent(mailStore::storeMessage);
         dmtp.setRecipientValidator(recipients -> {
             var faultyUsers = recipients.stream().map(user -> {
                     var tokens = user.split("@");
                     if(!tokens[1].equals(serverName)) return null;
-                    if(userCredentials.get(tokens[0]) != null) return null;
+                    if(!mailStore.hasUser(tokens[0])) return null;
                     return user;
             }).filter(user -> user != null).collect(Collectors.toList());
             return faultyUsers;
@@ -74,43 +70,10 @@ public class MailboxServer implements IMailboxServer, Runnable {
         return dmtp;
     }
 
-    private void storeMessage(Message message){
-        for(var user : message.recipients){
-            var username = user.split("@")[0];
-            var userMap = getUserMessages(username);
-            var id = getNextId().toString();
-            userMap.put(id, message);
-        }
-    }
-
-    private synchronized Integer getNextId(){
-        return nextMessageId++;
-    }
-
-    private boolean validateCredentials(DMAPServerModel.Credentials credentials){
-        return credentials.password.equals(userCredentials.get(credentials.login));
-    }
-
-    private ConcurrentHashMap<String, Message> getUserMessages(String username){
-        var userMap = storedMessages.get(username);
-        if(userMap != null) return userMap;
-
-        // it is more efficient to synchronize only this block (this will only hit the first time a user connects)
-        // and re-fetch the list, than to synchronize the whole method
-        synchronized (this) {
-            var refetch = storedMessages.get(username);
-            if(refetch != null) return refetch;
-
-            userMap = new ConcurrentHashMap<>();
-            storedMessages.put(username, userMap);
-        }
-        return userMap;
-    }
-
     private DMAPServerModel createDmapModel(){
         var dmap = new DMAPServerModel();
-        dmap.setCredentialsValidator(this::validateCredentials);
-        dmap.setMessageSupplier(this::getUserMessages);
+        dmap.setCredentialsValidator(mailStore::validateCredentials);
+        dmap.setMessageSupplier(mailStore::getUserMessages);
         return dmap;
     }
 
