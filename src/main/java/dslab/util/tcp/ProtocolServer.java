@@ -9,10 +9,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 public class ProtocolServer implements Runnable {
-    private TCPPooledServer server;
-    private ConcurrentLinkedQueue<TCPClient> clients = new ConcurrentLinkedQueue<>();
-    private int port;
-    private Supplier<PacketProtocol> protocolSupplier;
+    private final TCPPooledServer server;
+    private final ConcurrentLinkedQueue<TCPClient> clients = new ConcurrentLinkedQueue<>();
+    private final int port;
+    private final Supplier<PacketProtocol> protocolSupplier;
 
     public ProtocolServer(int port, ExecutorService executor, Supplier<PacketProtocol> packetProtocolSupplier){
         this.port = port;
@@ -63,7 +63,7 @@ public class ProtocolServer implements Runnable {
 
         // init command event
         client.onDataReceived = (data) -> {
-            Packet result = null;
+            Packet result;
 
             // handle incoming protocol command
             try {

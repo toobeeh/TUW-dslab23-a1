@@ -3,16 +3,14 @@ package dslab.util.tcp;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class TCPPooledServer implements Runnable {
     private ServerSocket serverSocket = null;
-    private WorkerFactory workerFactory;
-    private int port;
+    private final WorkerFactory workerFactory;
+    private final int port;
     private Thread thread;
-    private ExecutorService threadPool;
+    private final ExecutorService threadPool;
 
     public TCPPooledServer(int port, WorkerFactory workerFactory, ExecutorService executorService){
         this.port = port;
@@ -29,11 +27,11 @@ public class TCPPooledServer implements Runnable {
             throw new RuntimeException(e);
         }
         while(!thread.isInterrupted()){
-            Socket clientSocket = null;
+            Socket clientSocket;
             try {
                 clientSocket = this.serverSocket.accept();
             } catch (IOException e) {
-                System.err.println(e);
+                System.err.println(e.getMessage());
                 break;
             }
             threadPool.execute(workerFactory.createWorker(clientSocket));
@@ -45,7 +43,7 @@ public class TCPPooledServer implements Runnable {
             try {
                 this.serverSocket.close();
             } catch (IOException e) {
-                System.err.println(e);
+                System.err.println(e.getMessage());
             }
         }
         if (thread != null) {
@@ -53,7 +51,7 @@ public class TCPPooledServer implements Runnable {
             try {
                 thread.join();
             } catch (InterruptedException e) {
-                System.err.println(e);
+                System.err.println(e.getMessage());
             }
         }
     }

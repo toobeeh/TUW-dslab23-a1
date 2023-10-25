@@ -14,9 +14,10 @@ import dslab.util.Config;
 /**
  * The component factory provides methods to create the core components of the application. You can edit the method body
  * if the component instantiation requires additional logic.
- *
+ * <p>
  * Do not change the existing method signatures!
  */
+@SuppressWarnings("RedundantThrows")
 public final class ComponentFactory {
 
     private ComponentFactory() {

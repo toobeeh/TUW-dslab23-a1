@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 
 public class EmailMonitor {
 
-    private Map<String, Integer> addresses = new HashMap<>();
-    private Map<String, Integer> servers = new HashMap<>();
+    private final Map<String, Integer> addresses = new HashMap<>();
+    private final Map<String, Integer> servers = new HashMap<>();
 
     public void log(MonitoringPacket packet){
 

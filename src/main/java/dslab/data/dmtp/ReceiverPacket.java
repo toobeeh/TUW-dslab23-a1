@@ -9,7 +9,6 @@ import dslab.util.Message;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @CommandPacket("to")
 public class ReceiverPacket implements Packet<ReceiverPacket> {
@@ -29,7 +28,7 @@ public class ReceiverPacket implements Packet<ReceiverPacket> {
 
     @Override
     public String toPacketString() {
-        return "to " + this.recipients.stream().collect(Collectors.joining(","));
+        return "to " + String.join(",",this.recipients);
     }
 
 

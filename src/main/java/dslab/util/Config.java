@@ -11,7 +11,7 @@ import java.util.Set;
 public final class Config {
 
     private final ResourceBundle bundle;
-    private Map<String, Object> properties = new HashMap<>();
+    private final Map<String, Object> properties = new HashMap<>();
 
     /**
      * Creates an instance of Config which reads configuration data form {@code .properties} file with given name found

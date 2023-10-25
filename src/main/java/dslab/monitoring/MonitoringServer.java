@@ -14,9 +14,9 @@ import dslab.util.udp.UDPReceiver;
 
 public class MonitoringServer implements IMonitoringServer {
 
-    private UDPReceiver receiver;
-    private EmailMonitor monitor;
-    private Shell shell;
+    private final UDPReceiver receiver;
+    private final EmailMonitor monitor;
+    private final Shell shell;
 
     /**
      * Creates a new server instance.

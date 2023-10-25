@@ -7,14 +7,14 @@ import dslab.data.dmap.*;
 import dslab.data.exceptions.PacketHandleException;
 import dslab.util.Message;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
-import java.util.HashMap;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DMAPServerModel extends PacketProtocol {
 
-    public class Credentials {
+    public static class Credentials {
         public String login;
         public String password;
     }

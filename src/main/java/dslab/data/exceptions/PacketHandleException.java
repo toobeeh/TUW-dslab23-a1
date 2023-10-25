@@ -5,7 +5,7 @@ package dslab.data.exceptions;
  * eg when it has been sent in an illeagal state or contains illegal data
  */
 public class PacketHandleException extends Exception {
-    private String response;
+    private final String response;
     public PacketHandleException(String response) {
         super("An error occurred while processing the packet");
         this.response = response;

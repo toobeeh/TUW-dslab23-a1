@@ -11,11 +11,11 @@ import java.net.SocketException;
  */
 public class UDPReceiver implements Runnable {
 
-    private DatagramSocket socket;
+    private final DatagramSocket socket;
     private Thread thread;
-    private PacketReceivedCallback callback;
-    private int packetSize;
-    private boolean isRunning = false;
+    private final PacketReceivedCallback callback;
+    private final int packetSize;
+    private final boolean isRunning = false;
 
     public UDPReceiver(int port, int packetSize, PacketReceivedCallback callback) throws SocketException {
         this.socket = new DatagramSocket(port);
@@ -49,12 +49,7 @@ public class UDPReceiver implements Runnable {
             String data = new String(packet.getData(), 0, packet.getLength());
             InetAddress senderAddress = packet.getAddress();
 
-            try{
-                callback.onPacketReceivedCallback(data, senderAddress);
-            }
-            catch (Exception e) {
-                System.err.println("Error in Callback: \n" + e.toString());
-            }
+            callback.onPacketReceivedCallback(data, senderAddress);
         }
     }
 
@@ -64,7 +59,9 @@ public class UDPReceiver implements Runnable {
             thread.interrupt();
             try {
                 thread.join();
-            } catch (InterruptedException e) { }
+            } catch (InterruptedException e) {
+                System.out.println(e.getMessage());
+            }
         }
     }
 

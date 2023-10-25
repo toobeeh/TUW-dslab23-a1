@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Message implements Cloneable {
+@SuppressWarnings("MethodDoesntCallSuperMethod")
+public class Message {
     private static final String EMAIL_REGEX =
             "^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+)";
     public static boolean isValidEmail(String email){
@@ -24,7 +25,7 @@ public class Message implements Cloneable {
     /**
      * maps the message's recipients by their domain
      * emails need to be validated before with isValidEMail
-     * @return
+     * @return returns a map containing domains as keys and their recievers as values
      */
     public Map<String, List<String>> getRecipientDomains(){
         Map<String, List<String>> domainMap = new HashMap<>();
@@ -42,7 +43,6 @@ public class Message implements Cloneable {
         return domainMap;
     }
 
-    @Override
     public Message clone() {
         Message m = new Message();
         m.message = message;

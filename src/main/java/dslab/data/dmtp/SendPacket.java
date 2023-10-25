@@ -1,7 +1,6 @@
 package dslab.data.dmtp;
 
 import dslab.data.Packet;
-import dslab.data.exceptions.PacketParseException;
 import dslab.data.annotations.CommandPacket;
 import dslab.data.exceptions.PacketProtocolException;
 

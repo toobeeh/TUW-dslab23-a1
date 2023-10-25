@@ -10,7 +10,6 @@ import dslab.util.tcp.TCPClientHandle;
 import dslab.util.tcp.dmtp.DMTPClientModel;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
-import java.io.Console;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
@@ -19,18 +18,21 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class MessageDispatcher implements Runnable {
 
-    private String idHost;
-    private int idPort;
-    private ExecutorService executor;
-    private DatagramChannel monitoringChannel;
-    private DNS dns = new DNS();
+    private boolean acceptMessages = true;
 
-    private BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>();
+    private final String idHost;
+    private final int idPort;
+    private final ExecutorService executor;
+    private final DatagramChannel monitoringChannel;
+    private final DNS dns = new DNS();
+
+    private final BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>(); // is thread-safe
 
     public MessageDispatcher(int idPort, String monitoringHost, int monitoringPort, ExecutorService executor){
         this.idPort = idPort;
@@ -86,7 +88,12 @@ public class MessageDispatcher implements Runnable {
 
         // wait for results of all domain and if mailbox transfers failed, send the user a notification
         CompletableFuture.allOf(results.toArray(new CompletableFuture[0])).thenRun(() -> {
-            List<String> errors = results.stream().map(result -> result.join()).filter(error -> error != null).collect(Collectors.toList());
+            List<String> errors = results
+                    .stream()
+                    .map(CompletableFuture::join)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
             if(errors.size() > 0){
                 String errorMessage = String.join("\n", errors);
                 Message errorReport = new Message();
@@ -126,8 +133,7 @@ public class MessageDispatcher implements Runnable {
      * @param message the message to transmit to the mailbox; contains only users of the target domain
      */
     private CompletableFuture<String> sendMessageToMailbox(Message message, String domain) throws DomainNameNotFoundException, IOException {
-        InetSocketAddress mailboxAddress = null;
-        mailboxAddress = dns.getDomainNameAddress(domain);
+        InetSocketAddress mailboxAddress = dns.getDomainNameAddress(domain);
         var clientHandle = connectToTcpSocket(mailboxAddress.getHostName(), mailboxAddress.getPort());
 
         // set up receiver protocol (to validate server responses) and message sequence to be sent
@@ -180,13 +186,17 @@ public class MessageDispatcher implements Runnable {
     private TCPClientHandle connectToTcpSocket(String host, int port) throws IOException {
         Socket socket = new Socket(host, port);
         var client = new TCPClient(socket);
-        var handle = new TCPClientHandle(() -> executor.execute(client), client);
-        return handle;
+        return new TCPClientHandle(() -> executor.execute(client), client);
+    }
+
+    public void shutdown(){
+        acceptMessages = false;
     }
 
     @Override
     public void run() {
-        while(true){
+        new Thread(this, "Message Dispatcher");
+        while(acceptMessages){
             try {
                 Message message = messageQueue.take();
                 handleMessage(message);

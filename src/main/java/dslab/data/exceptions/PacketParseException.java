@@ -6,7 +6,7 @@ package dslab.data.exceptions;
  * the contents were faulty
  */
 public class PacketParseException extends Exception {
-    private String response;
+    private final String response;
     public PacketParseException(String response) {
         super("An error occurred while parsing the packet");
         this.response = response;

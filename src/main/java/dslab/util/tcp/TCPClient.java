@@ -9,11 +9,10 @@ import java.util.function.Consumer;
 
 public class TCPClient implements Runnable {
 
-    private Socket clientSocket;
-    private BufferedReader input;
+    private final Socket clientSocket;
     private PrintWriter output;
-    private CompletableFuture<TCPClient> onSocketShutdown = new CompletableFuture<>();
-    private CompletableFuture<TCPClient> onSocketReady = new CompletableFuture<>();
+    private final CompletableFuture<TCPClient> onSocketShutdown = new CompletableFuture<>();
+    private final CompletableFuture<TCPClient> onSocketReady = new CompletableFuture<>();
     private boolean stopped = false;
     public Consumer<String> onDataReceived = null;
     public CompletableFuture<TCPClient> getOnSocketShutdown() {
@@ -29,7 +28,7 @@ public class TCPClient implements Runnable {
 
     @Override
     public void run() {
-        input = null;
+        BufferedReader input;
         output = null;
         try {
             output = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -38,7 +37,7 @@ public class TCPClient implements Runnable {
             throw new RuntimeException(e);
         }
 
-        if(onSocketReady != null) onSocketReady.complete(this);
+        onSocketReady.complete(this);
 
         while(!stopped){
             try {
@@ -72,8 +71,8 @@ public class TCPClient implements Runnable {
         try {
             if(!clientSocket.isClosed()) clientSocket.close();
         } catch (IOException e) {
-            System.err.println(e);
+            System.err.println(e.getMessage());
         }
-        if(onSocketShutdown != null) onSocketShutdown.complete(this);
+        onSocketShutdown.complete(this);
     }
 }

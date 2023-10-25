@@ -2,14 +2,11 @@ package dslab.mailbox;
 
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import at.ac.tuwien.dsg.orvell.Shell;
 import at.ac.tuwien.dsg.orvell.StopShellException;
@@ -20,13 +17,12 @@ import dslab.util.tcp.DMAPServerModel;
 import dslab.util.tcp.ProtocolServer;
 import dslab.util.Config;
 import dslab.util.tcp.dmtp.DMTPServerModel;
-import org.hamcrest.internal.ReflectiveTypeFinder;
 
 public class MailboxServer implements IMailboxServer, Runnable {
-    private Shell shell;
-    private ProtocolServer dmtpServer, dmapServer;
-    private ExecutorService threadPool = Executors.newCachedThreadPool();
-    private ConcurrentHashMap<String, ConcurrentHashMap<String, Message>> storedMessages = new ConcurrentHashMap<>();
+    private final ProtocolServer dmtpServer;
+    private final ProtocolServer dmapServer;
+    private final ExecutorService threadPool = Executors.newCachedThreadPool();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, Message>> storedMessages = new ConcurrentHashMap<>();
     private final HashMap<String, String> userCredentials; // need not be thread safe since readonly
     private final String serverName;
     private int nextMessageId = 0;
@@ -55,7 +51,7 @@ public class MailboxServer implements IMailboxServer, Runnable {
         dmtpServer = new ProtocolServer(dmtpPort, threadPool, this::createDmtpModel);
         dmapServer = new ProtocolServer(dmapPort, threadPool, this::createDmapModel);
 
-        shell = new Shell(in, out);
+        var shell = new Shell(in, out);
         shell.setPrompt(componentId + "> ");
         shell.register(this);
     }
@@ -101,7 +97,7 @@ public class MailboxServer implements IMailboxServer, Runnable {
 
         // it is more efficient to synchronize only this block (this will only hit the first time a user connects)
         // and re-fetch the list, than to synchronize the whole method
-        synchronized (this.storedMessages) {
+        synchronized (this) {
             var refetch = storedMessages.get(username);
             if(refetch != null) return refetch;
 

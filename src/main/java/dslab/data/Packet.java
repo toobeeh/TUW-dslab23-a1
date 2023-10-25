@@ -7,8 +7,8 @@ public interface Packet<TPacket extends Packet> {
 
     TPacket parseString(String data) throws PacketParseException, PacketProtocolException;
 
-    public String toPacketString();
+    String toPacketString();
 
-    default public Packet getResponsePacket() { return new OkPacket(); }
+    default Packet getResponsePacket() { return new OkPacket(); }
 
 }

@@ -1,8 +1,8 @@
 package dslab.util.tcp;
 
 public class TCPClientHandle {
-    private Runnable startRunner;
-    private TCPClient client;
+    private final Runnable startRunner;
+    private final TCPClient client;
 
     public TCPClientHandle(Runnable start, TCPClient client) {
         this.startRunner = start;
