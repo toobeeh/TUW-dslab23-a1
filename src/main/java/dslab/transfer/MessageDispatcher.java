@@ -1,5 +1,6 @@
 package dslab.transfer;
 
+import dslab.data.ErrorPacket;
 import dslab.data.monitoring.MonitoringPacket;
 import dslab.util.Message;
 import dslab.util.PacketSequence;
@@ -98,7 +99,7 @@ public class MessageDispatcher extends Thread {
                 Message errorReport = new Message();
                 errorReport.recipients = List.of(message.sender);
                 errorReport.subject = "Failed to deliver message";
-                errorReport.sender = "mail@" + idHost;
+                errorReport.sender = "mailer@" + idHost;
                 errorReport.message = errorMessage + "\n> To: " + String.join(", ", message.recipients) + "\n> Subject: " + message.subject + "\n> " + message.message.replace("\n", "\n> ");
                 try {
                     sendMessageToMailbox(errorReport, message.sender.split("@")[1]);
@@ -139,6 +140,7 @@ public class MessageDispatcher extends Thread {
         var client = clientHandle.getClient();
         var protocol = new DMTPClientModel();
         var sequence = PacketSequence.fromMessage(message);
+        sequence.setValidator((request, response) -> !(response instanceof ErrorPacket));
 
         var result = new CompletableFuture<String>();
 

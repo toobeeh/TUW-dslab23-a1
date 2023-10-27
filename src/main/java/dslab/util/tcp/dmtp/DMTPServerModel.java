@@ -1,6 +1,7 @@
 package dslab.util.tcp.dmtp;
 
 import dslab.data.OkPacket;
+import dslab.data.Packet;
 import dslab.data.QuitPacket;
 import dslab.util.tcp.exceptions.PacketHandleException;
 import dslab.util.tcp.annotations.CommandPacketHandler;
@@ -9,8 +10,10 @@ import dslab.util.Message;
 import dslab.util.tcp.PacketProtocol;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /**
@@ -26,7 +29,13 @@ public class DMTPServerModel extends PacketProtocol {
 
     private Consumer<Message> onMessageSent;
 
-    private UnaryOperator<List<String>> validateRecipients;
+    private Function<List<String>, ValidatedRecipients> validateRecipients;
+
+    public static class ValidatedRecipients {
+        public List<String> validRecipients = new ArrayList<>();
+        public List<String> ignoredRecipients = new ArrayList<>();
+        public List<String> erroredRecipients = new ArrayList<>();
+    }
 
     /**
      * Sets the callback that is executed as soon as a client submitted a message
@@ -42,7 +51,7 @@ public class DMTPServerModel extends PacketProtocol {
      *                  recipients and returns those that are invalid.
      *                  null or an empty list mean that all recipients were valid.
      */
-    public void setRecipientValidator(UnaryOperator<List<String>> validator){
+    public void setRecipientValidator(Function<List<String>, ValidatedRecipients> validator){
         this.validateRecipients = validator;
     }
 
@@ -52,10 +61,10 @@ public class DMTPServerModel extends PacketProtocol {
 
         message = new Message();
         // TODO remove
-        message.sender = "general.kenobi@jedi.coruscant";
-        message.recipients = List.of("general.grievous@dookus-gang.seperatists");
-        message.subject = "You are smaller than i expected ;)";
-        message.message = "Hello there!\n- General Kenobi! You are a bold one.";
+        //message.sender = "general.kenobi@jedi.coruscant";
+        //message.recipients = List.of("general.grievous@dookus-gang.seperatists");
+        //message.subject = "You are smaller than i expected ;)";
+        //message.message = "Hello there!\n- General Kenobi! You are a bold one.";
     }
 
     @CommandPacketHandler
@@ -69,8 +78,16 @@ public class DMTPServerModel extends PacketProtocol {
     }
 
     @CommandPacketHandler
-    public void handleRecipients(ReceiverPacket packet) throws PacketHandleException {
-        getMessage().recipients = packet.recipients;
+    public OkPacket handleRecipients(ReceiverPacket packet) throws PacketHandleException {
+
+        if(validateRecipients != null) {
+            var validated = validateRecipients.apply(packet.recipients);
+            if(validated.erroredRecipients.size() > 0) throw new PacketHandleException("");
+            getMessage().recipients = validated.validRecipients;
+        }
+        else getMessage().recipients = packet.recipients;
+
+        return new OkPacket().withMessage(getMessage().recipients.size() + "");
     }
 
     @CommandPacketHandler
@@ -87,17 +104,6 @@ public class DMTPServerModel extends PacketProtocol {
         if(message.recipients == null) throw new PacketHandleException("no recipients");
         this.message = null;
         if(onMessageSent != null) onMessageSent.accept(message);
-
-        // validate recipients AFTER it has been sent so
-        // that it still gets delivered to the valid recipients
-        if(validateRecipients != null) {
-            var invalid = validateRecipients.apply(message.recipients);
-            if(invalid != null && invalid.size() > 0){
-                var error = "unknown user" + (invalid.size() > 1 ? "s" : "") + " "
-                        + String.join(",", invalid);
-                throw new PacketHandleException(error);
-            }
-        }
     }
 
     @CommandPacketHandler

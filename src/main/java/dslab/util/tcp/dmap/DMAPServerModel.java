@@ -2,6 +2,8 @@ package dslab.util.tcp.dmap;
 
 import dslab.data.AnonymousPacket;
 import dslab.data.ErrorPacket;
+import dslab.data.OkPacket;
+import dslab.data.QuitPacket;
 import dslab.util.tcp.annotations.CommandPacketHandler;
 import dslab.data.dmap.*;
 import dslab.util.tcp.exceptions.PacketHandleException;
@@ -100,6 +102,11 @@ public class DMAPServerModel extends PacketProtocol {
         var message = messages.get(packet.messageId);
         if(message == null) throw new PacketHandleException("unknown message id");
         messages.remove(packet.messageId);
+    }
+
+    @CommandPacketHandler
+    public void handleQuit(QuitPacket packet) throws ProtocolCloseException {
+        throw new ProtocolCloseException(new OkPacket().withMessage("bye"));
     }
 
     @Override

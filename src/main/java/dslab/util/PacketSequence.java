@@ -7,12 +7,19 @@ import dslab.util.tcp.exceptions.ProtocolCloseException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class PacketSequence {
 
     ArrayList<Packet> packets;
     private Packet currentPacket;
     private Packet currentResult;
+    private BiFunction<String, Packet, Boolean> validator;
+
+    public void setValidator(BiFunction<String, Packet, Boolean> validator) {
+        this.validator = validator;
+    }
 
     public PacketSequence(Packet ...packets){
         this.packets = new ArrayList<>(List.of(packets));
@@ -37,7 +44,7 @@ public class PacketSequence {
         }
 
         // response was not as expected; abort
-        if(!data.equals(currentPacket.getResponsePacket().toPacketString())){
+        if(validator != null && !validator.apply(data, currentPacket)){
             packets = new ArrayList<>();
         }
     }
