@@ -42,8 +42,8 @@ public class MonitoringServer implements IMonitoringServer {
 
     @Override
     public void run() {
-        this.receiver.listen();
-        this.shell.run();
+        this.receiver.start();
+        this.shell.run(); // starts the shell in the main thread
     }
 
     @Override
@@ -63,7 +63,7 @@ public class MonitoringServer implements IMonitoringServer {
     @Override
     @Command
     public void shutdown() {
-        this.receiver.stop();
+        this.receiver.shutdown();
         throw new StopShellException();
     }
 

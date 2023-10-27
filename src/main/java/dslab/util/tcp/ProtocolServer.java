@@ -8,21 +8,30 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
-public class ProtocolServer implements Runnable {
-    private final TCPPooledServer server;
+/**
+ * A thread that serves a protocol implementation to clients
+ * The main thread listens for client connection; each client
+ * gets a new thread from the provided executor service
+ * with a new protocol interaction model created by the provided
+ * factory.
+ */
+public class ProtocolServer extends Thread {
+    private final TCPServer server;
     private final ConcurrentLinkedQueue<TCPClient> clients = new ConcurrentLinkedQueue<>();
     private final int port;
     private final Supplier<PacketProtocol> protocolSupplier;
 
     public ProtocolServer(int port, ExecutorService executor, Supplier<PacketProtocol> packetProtocolSupplier){
         this.port = port;
-        this.server = new TCPPooledServer(port, this::createClientWorker, executor);
+        this.server = new TCPServer(port, this::createClientWorker, executor);
         this.protocolSupplier = packetProtocolSupplier;
     }
 
+    /**
+     * Starts the TCP server and therefore listening for client connections
+     */
     @Override
     public void run() {
-
         var name = "";
         {
             var p = protocolSupplier.get();
@@ -30,22 +39,27 @@ public class ProtocolServer implements Runnable {
         }
 
         // start the server with threadpool in a new thread
-        new Thread(this.server, name + " Server").start();
+        this.setName("Protocol server " + name);
+        this.server.run(); // in this thread
         System.out.println(name + " Server online on port " + port);
     }
 
+    /**
+     * Stops all currently connected clients and shuts down the
+     * tcp server so that no new clients can connect
+     */
     public void shutdown() {
+        this.server.shutdown();
         for(var client: clients){
             client.shutdown();
         }
-        this.server.shutdown();
     }
 
 
     /**
-     * initializes a DMTP client
+     * initializes a client with a protocol interaction model
      * @param clientSocket the socket connection to the client
-     * @return a runnable dmtp connection to the client
+     * @return a runnable tcp protocol connection to the client
      */
     private TCPClient createClientWorker(Socket clientSocket){
         var client = new TCPClient(clientSocket);

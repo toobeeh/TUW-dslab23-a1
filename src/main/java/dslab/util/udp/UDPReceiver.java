@@ -7,15 +7,14 @@ import java.net.InetAddress;
 import java.net.SocketException;
 
 /**
- * A class that establishes a read-only UDP socket
+ * A thread that establishes a read-only UDP socket
+ * This class extends thread; UDPReceiver::start has to be called in order to start listening
  */
-public class UDPReceiver implements Runnable {
+public class UDPReceiver extends Thread {
 
     private final DatagramSocket socket;
-    private Thread thread;
     private final PacketReceivedCallback callback;
     private final int packetSize;
-    private final boolean isRunning = false;
 
     public UDPReceiver(int port, int packetSize, PacketReceivedCallback callback) throws SocketException {
         this.socket = new DatagramSocket(port);
@@ -23,17 +22,17 @@ public class UDPReceiver implements Runnable {
         this.callback = callback;
     }
 
-    public void listen() {
-        this.thread = new Thread(this);
-        this.thread.start();
-    }
-
+    /**
+     * Starts listening for udp packets on the specified port in the own thread
+     */
     @Override
     public void run() {
 
+        this.setName("UDP Receiver");
+
         byte[] receivedData = new byte[packetSize];
 
-        while(!thread.isInterrupted()) {
+        while(!isInterrupted()) {
 
             // try to receive packet
             DatagramPacket packet = new DatagramPacket(receivedData, receivedData.length);
@@ -53,16 +52,12 @@ public class UDPReceiver implements Runnable {
         }
     }
 
-    public void stop() {
+    /**
+     * Stops receiving udp packets and shuts down the thread
+     */
+    public void shutdown() {
+        interrupt();
         if(!socket.isClosed()) socket.close();
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                System.out.println(e.getMessage());
-            }
-        }
     }
 
     public interface PacketReceivedCallback {

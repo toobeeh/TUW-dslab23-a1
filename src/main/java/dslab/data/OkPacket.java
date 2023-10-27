@@ -1,7 +1,7 @@
 package dslab.data;
 
-import dslab.data.annotations.CommandPacket;
-import dslab.data.exceptions.PacketProtocolException;
+import dslab.util.tcp.annotations.CommandPacket;
+import dslab.util.tcp.exceptions.PacketProtocolException;
 
 @CommandPacket("ok")
 public class OkPacket implements Packet<OkPacket> {

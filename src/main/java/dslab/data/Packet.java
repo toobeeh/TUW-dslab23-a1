@@ -1,7 +1,7 @@
 package dslab.data;
 
-import dslab.data.exceptions.PacketParseException;
-import dslab.data.exceptions.PacketProtocolException;
+import dslab.util.tcp.exceptions.PacketParseException;
+import dslab.util.tcp.exceptions.PacketProtocolException;
 
 public interface Packet<TPacket extends Packet> {
 

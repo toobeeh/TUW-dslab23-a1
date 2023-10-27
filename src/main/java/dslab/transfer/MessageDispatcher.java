@@ -22,10 +22,9 @@ import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-public class MessageDispatcher implements Runnable {
+public class MessageDispatcher extends Thread {
 
     private boolean acceptMessages = true;
-
     private final String idHost;
     private final int idPort;
     private final ExecutorService executor;
@@ -195,7 +194,7 @@ public class MessageDispatcher implements Runnable {
 
     @Override
     public void run() {
-        new Thread(this, "Message Dispatcher");
+        this.setName("Message Dispatcher");
         while(acceptMessages){
             try {
                 Message message = messageQueue.take();

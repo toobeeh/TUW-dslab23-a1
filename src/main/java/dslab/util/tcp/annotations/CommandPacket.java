@@ -1,4 +1,4 @@
-package dslab.data.annotations;
+package dslab.util.tcp.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

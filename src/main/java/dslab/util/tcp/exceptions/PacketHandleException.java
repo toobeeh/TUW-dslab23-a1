@@ -1,4 +1,4 @@
-package dslab.data.exceptions;
+package dslab.util.tcp.exceptions;
 
 /**
  * An exception that occurs while handling a valid packet;

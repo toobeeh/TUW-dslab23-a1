@@ -1,11 +1,11 @@
 package dslab.util.tcp;
 
 import dslab.data.*;
-import dslab.data.annotations.CommandPacket;
-import dslab.data.annotations.CommandPacketHandler;
-import dslab.data.exceptions.PacketParseException;
-import dslab.data.exceptions.PacketHandleException;
-import dslab.data.exceptions.PacketProtocolException;
+import dslab.util.tcp.annotations.CommandPacket;
+import dslab.util.tcp.annotations.CommandPacketHandler;
+import dslab.util.tcp.exceptions.PacketParseException;
+import dslab.util.tcp.exceptions.PacketHandleException;
+import dslab.util.tcp.exceptions.PacketProtocolException;
 import dslab.util.tcp.exceptions.ProtocolCloseException;
 
 import java.lang.reflect.InvocationTargetException;

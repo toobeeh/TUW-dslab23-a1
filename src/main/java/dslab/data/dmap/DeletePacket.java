@@ -1,9 +1,9 @@
 package dslab.data.dmap;
 
 import dslab.data.Packet;
-import dslab.data.annotations.CommandPacket;
-import dslab.data.exceptions.PacketParseException;
-import dslab.data.exceptions.PacketProtocolException;
+import dslab.util.tcp.annotations.CommandPacket;
+import dslab.util.tcp.exceptions.PacketParseException;
+import dslab.util.tcp.exceptions.PacketProtocolException;
 
 @CommandPacket("delete")
 public class DeletePacket implements Packet<DeletePacket> {

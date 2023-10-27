@@ -2,8 +2,8 @@ package dslab.util.tcp.dmtp;
 
 import dslab.data.OkPacket;
 import dslab.data.QuitPacket;
-import dslab.data.exceptions.PacketHandleException;
-import dslab.data.annotations.CommandPacketHandler;
+import dslab.util.tcp.exceptions.PacketHandleException;
+import dslab.util.tcp.annotations.CommandPacketHandler;
 import dslab.data.dmtp.*;
 import dslab.util.Message;
 import dslab.util.tcp.PacketProtocol;

@@ -24,6 +24,7 @@ public class MailboxServer implements IMailboxServer, Runnable {
     private final MailStore mailStore;
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
     private final String serverName;
+    private final Shell shell;
 
     /**
      * Creates a new server instance.
@@ -38,7 +39,7 @@ public class MailboxServer implements IMailboxServer, Runnable {
         var dmapPort = config.getInt("dmap.tcp.port");
         serverName = config.getString("domain");
 
-        // init mail data store
+        // init mail data store (data handling abstraction)
         var userCredentials = new HashMap<String,String>();
         var userConfig = new Config(config.getString("users.config"));
         for(var user : userConfig.listKeys()){
@@ -50,11 +51,14 @@ public class MailboxServer implements IMailboxServer, Runnable {
         dmtpServer = new ProtocolServer(dmtpPort, threadPool, this::createDmtpModel);
         dmapServer = new ProtocolServer(dmapPort, threadPool, this::createDmapModel);
 
-        var shell = new Shell(in, out);
+        shell = new Shell(in, out);
         shell.setPrompt(componentId + "> ");
         shell.register(this);
     }
-
+    /**
+     * creates a new DMTP server model for client interaction
+     * @return a fresh dmtp protocol model
+     */
     private DMTPServerModel createDmtpModel(){
         var dmtp = new DMTPServerModel();
         dmtp.setOnMessageSent(mailStore::storeMessage);
@@ -69,7 +73,10 @@ public class MailboxServer implements IMailboxServer, Runnable {
         });
         return dmtp;
     }
-
+    /**
+     * creates a new DMAP server model for client interaction
+     * @return a fresh dmap protocol model
+     */
     private DMAPServerModel createDmapModel(){
         var dmap = new DMAPServerModel();
         dmap.setCredentialsValidator(mailStore::validateCredentials);
@@ -79,8 +86,9 @@ public class MailboxServer implements IMailboxServer, Runnable {
 
     @Override
     public void run() {
-        dmtpServer.run();
-        dmapServer.run();
+        dmtpServer.start();// dmtp server is a thread
+        dmapServer.start();// dmap server is a thread
+        shell.run(); // start shell in main thread
     }
 
     @Override

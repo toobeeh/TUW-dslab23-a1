@@ -41,6 +41,10 @@ public class TransferServer implements ITransferServer, Runnable {
         shell.register(this);
     }
 
+    /**
+     * creates a new DMTP server model for client interaction
+     * @return a fresh dmtp protocol model
+     */
     private DMTPServerModel createDmtpModel(){
         var dmtp = new DMTPServerModel();
         dmtp.setOnMessageSent(message -> messageDispatcher.queueMessage(message));
@@ -49,9 +53,9 @@ public class TransferServer implements ITransferServer, Runnable {
 
     @Override
     public void run() {
-        messageDispatcher.run();
-        dmtpServer.run();
-        shell.run();
+        messageDispatcher.start(); // message dispatcher is a thread
+        dmtpServer.start(); // dmtp server is a thread
+        shell.run(); // start shell in main thread
     }
 
     @Override
