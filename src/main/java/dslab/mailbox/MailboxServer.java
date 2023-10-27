@@ -65,8 +65,8 @@ public class MailboxServer implements IMailboxServer, Runnable {
         dmtp.setRecipientValidator(recipients -> {
             var faultyUsers = recipients.stream().map(user -> {
                     var tokens = user.split("@");
-                    if(!tokens[1].equals(serverName)) return null;
-                    if(!mailStore.hasUser(tokens[0])) return null;
+                    if(!tokens[1].equals(serverName)) return user;
+                    if(mailStore.hasUser(tokens[0])) return null;
                     return user;
             }).filter(user -> user != null).collect(Collectors.toList());
             return faultyUsers;
