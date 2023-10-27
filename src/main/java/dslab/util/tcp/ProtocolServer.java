@@ -40,8 +40,8 @@ public class ProtocolServer extends Thread {
 
         // start the server with threadpool in a new thread
         this.setName("Protocol server " + name);
-        this.server.run(); // in this thread
         System.out.println(name + " Server online on port " + port);
+        this.server.run(); // in this thread
     }
 
     /**
