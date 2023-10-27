@@ -189,6 +189,7 @@ public class MessageDispatcher extends Thread {
     }
 
     public void shutdown(){
+        interrupt();
         acceptMessages = false;
     }
 
