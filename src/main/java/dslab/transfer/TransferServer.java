@@ -10,15 +10,16 @@ import at.ac.tuwien.dsg.orvell.StopShellException;
 import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
 import dslab.util.Config;
-import dslab.util.tcp.ProtocolServer;
+import dslab.util.tcp.ProtocolServerThread;
 import dslab.util.tcp.dmtp.DMTPServerModel;
 
 public class TransferServer implements ITransferServer, Runnable {
 
     private final Shell shell;
-    private final ProtocolServer dmtpServer;
-    private final MessageDispatcher messageDispatcher;
-    private final ExecutorService threadPool = Executors.newCachedThreadPool();
+    private final ProtocolServerThread dmtpServer;
+    private final MessageDispatcherThread messageDispatcher;
+    private final ExecutorService clientThreadPool = Executors.newCachedThreadPool();
+    private final ExecutorService messageThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     /**
      * Creates a new server instance.
@@ -33,8 +34,8 @@ public class TransferServer implements ITransferServer, Runnable {
         var monitoringHost = config.getString("monitoring.host");
         var monitoringPort = config.getInt("monitoring.port");
 
-        messageDispatcher = new MessageDispatcher(port, monitoringHost, monitoringPort, threadPool);
-        dmtpServer = new ProtocolServer(port, threadPool, this::createDmtpModel);
+        messageDispatcher = new MessageDispatcherThread(port, monitoringHost, monitoringPort, messageThreadPool);
+        dmtpServer = new ProtocolServerThread(port, clientThreadPool, this::createDmtpModel);
 
         shell = new Shell(in, out);
         shell.setPrompt(componentId + "> ");
@@ -63,7 +64,7 @@ public class TransferServer implements ITransferServer, Runnable {
     public void shutdown() {
         messageDispatcher.shutdown();
         dmtpServer.shutdown();
-        threadPool.shutdown();
+        clientThreadPool.shutdown();
         throw new StopShellException();
     }
 

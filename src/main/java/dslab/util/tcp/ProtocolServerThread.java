@@ -15,13 +15,13 @@ import java.util.function.Supplier;
  * with a new protocol interaction model created by the provided
  * factory.
  */
-public class ProtocolServer extends Thread {
+public class ProtocolServerThread extends Thread {
     private final TCPServer server;
     private final ConcurrentLinkedQueue<TCPClient> clients = new ConcurrentLinkedQueue<>();
     private final int port;
     private final Supplier<PacketProtocol> protocolSupplier;
 
-    public ProtocolServer(int port, ExecutorService executor, Supplier<PacketProtocol> packetProtocolSupplier){
+    public ProtocolServerThread(int port, ExecutorService executor, Supplier<PacketProtocol> packetProtocolSupplier){
         this.port = port;
         this.server = new TCPServer(port, this::createClientWorker, executor);
         this.protocolSupplier = packetProtocolSupplier;
@@ -40,7 +40,7 @@ public class ProtocolServer extends Thread {
 
         // start the server with threadpool in a new thread
         this.setName("Protocol server " + name);
-        System.out.println(name + " Server online on port " + port);
+        //System.out.println(name + " Server online on port " + port);
         this.server.run(); // in this thread
     }
 

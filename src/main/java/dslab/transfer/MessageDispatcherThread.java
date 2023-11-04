@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-public class MessageDispatcher extends Thread {
+public class MessageDispatcherThread extends Thread {
 
     private boolean acceptMessages = true;
     private final String idHost;
@@ -34,7 +34,7 @@ public class MessageDispatcher extends Thread {
 
     private final BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>(); // is thread-safe
 
-    public MessageDispatcher(int idPort, String monitoringHost, int monitoringPort, ExecutorService executor){
+    public MessageDispatcherThread(int idPort, String monitoringHost, int monitoringPort, ExecutorService executor){
         this.idPort = idPort;
         this.executor = executor;
 

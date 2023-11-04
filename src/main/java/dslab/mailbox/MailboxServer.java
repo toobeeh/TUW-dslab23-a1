@@ -3,24 +3,21 @@ package dslab.mailbox;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 import at.ac.tuwien.dsg.orvell.Shell;
 import at.ac.tuwien.dsg.orvell.StopShellException;
 import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
-import dslab.util.Message;
 import dslab.util.tcp.dmap.DMAPServerModel;
-import dslab.util.tcp.ProtocolServer;
+import dslab.util.tcp.ProtocolServerThread;
 import dslab.util.Config;
 import dslab.util.tcp.dmtp.DMTPServerModel;
 
 public class MailboxServer implements IMailboxServer, Runnable {
-    private final ProtocolServer dmtpServer;
-    private final ProtocolServer dmapServer;
+    private final ProtocolServerThread dmtpServer;
+    private final ProtocolServerThread dmapServer;
     private final MailStore mailStore;
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
     private final String serverName;
@@ -48,8 +45,8 @@ public class MailboxServer implements IMailboxServer, Runnable {
         mailStore = new MailStore(userCredentials);
 
         // init servers
-        dmtpServer = new ProtocolServer(dmtpPort, threadPool, this::createDmtpModel);
-        dmapServer = new ProtocolServer(dmapPort, threadPool, this::createDmapModel);
+        dmtpServer = new ProtocolServerThread(dmtpPort, threadPool, this::createDmtpModel);
+        dmapServer = new ProtocolServerThread(dmapPort, threadPool, this::createDmapModel);
 
         shell = new Shell(in, out);
         shell.setPrompt(componentId + "> ");
