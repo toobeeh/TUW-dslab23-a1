@@ -1,3 +1,7 @@
+> note to all TUW students that found this in the github search:
+> this solution is pretty overengineered in the aspect of modelling protocols, so using that would be easily detected as plagiarism.
+> feel free to use as inspiration though, i really like the way it turned out!
+
 distributed systems lab
 =======================
 
